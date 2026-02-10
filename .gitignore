@@ -53,3 +53,31 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# binaries
+app
+*.out
+*.exe
+
+# build artifacts
+build/
+*.o
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# binaries
+app
+*.out
+*.exe
+
+# build artifacts
+build/
+*.o
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
