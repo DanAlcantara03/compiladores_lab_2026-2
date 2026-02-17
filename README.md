@@ -68,6 +68,38 @@ We follow a lightweight GitFlow approach:
 
 `<target>` should identify the folder scope, for example: `p03`, `p11`, or `final_proyect`.
 
+### Commit Message Convention
+
+All commits should follow this format:
+
+`<type>(<scope>): <summary>`
+
+- Use each `type` as follows:
+  - `feat`: add new functionality (new behavior, new API, new module capability)
+  - `fix`: correct a bug or wrong behavior
+  - `refactor`: change internal code structure without changing behavior
+  - `test`: add or update tests only
+  - `docs`: documentation-only changes
+  - `build`: build-system or dependency changes (CMake, Makefile, compiler flags)
+  - `ci`: CI/CD pipeline changes (GitHub Actions, GitLab CI, validation jobs)
+  - `chore`: maintenance tasks not covered above (cleanup, renames, tooling configs)
+  - `perf`: performance improvements without functional changes
+- `scope`: folder, file, or module scope (for example: `include`, `src`, `src/regex.c`, `tests`, `cmake`)
+- `summary`: imperative present tense, concise, and no trailing period
+
+When a file contains mixed logical changes, use patch mode to split commits cleanly:
+
+```bash
+git add -p
+```
+
+Examples:
+
+- `feat(include): define initial regex API for main integration and testing`
+- `fix(src): correct epsilon transition handling in NFA construction`
+- `refactor(src/regex.c): extract parse_union helper`
+- `test(tests): add unit tests for alternation and concatenation`
+
 ## Course Methodology: Practices + Final Integration
 
 This repository contains 12 project folders developed during the semester:
@@ -109,7 +141,7 @@ git checkout -b feature/p03-buffer-tokenizer
 # Implement and test practice in p03-...
 
 git add .
-git commit -m "Implement buffered input and tokenizer"
+git commit -m "feat(p03): implement buffered input and tokenizer"
 git push -u origin feature/p03-buffer-tokenizer
 
 # Open PR -> develop (GitHub/GitLab)
@@ -123,7 +155,7 @@ git push origin p03
 git checkout -b feature/final-integrate-p03-tokenizer
 # Integrate p03 module into final_proyect
 git add .
-git commit -m "Integrate p03 tokenizer module into final project"
+git commit -m "feat(final_proyect): integrate p03 tokenizer module into final project"
 git push -u origin feature/final-integrate-p03-tokenizer
 ```
 
