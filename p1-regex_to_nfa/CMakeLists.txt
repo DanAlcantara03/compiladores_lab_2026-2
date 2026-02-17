@@ -9,3 +9,7 @@ add_executable(regex_to_nfa
     ./src/nfa.c
     ./src/regex.c
 )
+
+target_include_directories(regex_to_nfa PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
