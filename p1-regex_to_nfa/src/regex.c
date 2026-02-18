@@ -73,7 +73,23 @@ void regex_free(regex *r){
     r->size = 0;
 }
 
-
+/**
+ * @brief Orchestrates the parsing pipeline with explicit ownership boundaries.
+ *
+ * Implementation strategy:
+ * - First normalizes the user expression from implicit concatenation to an explicit infix form (`a(b|c)` -> `a.(b|c)`), using 'from_implicit_to_explicit_concat', because the next stage expects explicit operators.
+ * - Then delegates conversion to postfix to `regex_explicit_infix_to_postfix`, keeping parsing responsibilities separated by stage.
+ *
+ * Memory discipline in this implementation:
+ * - The normalized infix buffer is temporary and function-local.
+ * - It is always released in this function after stage 2 runs.
+ * - If normalization fails, the function returns immediately with a zero-initialized regex, avoiding partial states.
+ */
 regex parse_regex(const regex *infix_implicit){
+    if (!infix_implicit) return create_regex(NULL);
 
+    regex explicit_infix = from_implicit_to_explicit_concat(infix_implicit);
+    regex out = regex_explicit_infix_to_postfix(&explicit_infix);
+    regex_free(&explicit_infix);
+    return out;
 }
