@@ -58,9 +58,19 @@ regex create_regex(const char *regex_expression){
     return r;
 }
 
-
+/**
+ * @brief Applies the module teardown policy: free resources and normalize state.
+ *
+ * Implementation details:
+ * - Uses a null-guard so callers can invoke cleanup unconditionally.
+ * - Frees only the internal dynamic array (`items`); the struct itself remains owned by the caller.
+ * - Rewrites the object to a canonical empty state right after free (`items = NULL`, `size = 0`) so future checks and repeated cleanup behave deterministically.
+ */
 void regex_free(regex *r){
-
+    if (!r) return;
+    free(r->items);
+    r->items = NULL;
+    r->size = 0;
 }
 
 
