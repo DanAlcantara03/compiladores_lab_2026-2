@@ -27,8 +27,6 @@ static bool is_literal(char c){
 
 /**
  * @brief Returns whether @p symbol can start an atom.
-    regex r = (regex){ .items = NULL, .size = 0};
-    if (!regex)
  * @param symbol The character to classify.
  * @return true if @p symbol can start an atom; false otherwise.
  */
@@ -46,7 +44,6 @@ static bool ends_atom(char symbol){
 }
 
 /* --- Helpers in regex.h (useful for organization) --- */
-
 
 /**
  * @brief Normalizes implicit concatenation using a single left-to-right pass.
