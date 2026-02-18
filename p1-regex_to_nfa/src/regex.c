@@ -28,8 +28,34 @@ void regex_print(regex r, FILE *out){
 
 /* --- Principal Functions --- */
 
+/**
+ * @brief Creates an owning regex object from a C-string expression.
+ *
+ * Implementation details:
+ * - Starts from a canonical empty descriptor (`items = NULL`, `size = 0`) so every early return remains valid.
+ * - Treats `NULL` input as an empty regex and exits without allocating.
+ * - Uses `strlen` to capture the logical length in `size` (excluding `'\0'`).
+ * - Allocates `size + 1` bytes and copies `size + 1` bytes with `memcpy`, preserving the terminating null byte in the internal buffer.
+ * - If allocation fails, normalizes the result back to empty (`size = 0`, `items = NULL`) and returns it.
+ *
+ * Ownership contract:
+ * - On success, the returned object owns `items`; callers must release it with `regex_free`.
+ */
 regex create_regex(const char *regex_expression){
-    
+    regex r = (regex){ .items = NULL, .size = 0};
+    if (!regex_expression) return r;
+
+    r.size = strlen(regex_expression);
+
+    // Save the expression as (array + '\0')
+    r.items = (char*)malloc(r.size + 1);
+    if(!r.items){
+        r.size = 0;
+        return r;
+    }
+
+    memcpy(r.items, regex_expression, r.size + 1); // the copy includes '\0'
+    return r;
 }
 
 
