@@ -7,13 +7,87 @@
 
 /* --- Local Helpers to do the implementation easier --- */
 
+/**
+ * @brief Returns whether @p symbol is a literal (not one of ()|*).
+ * @param symbol The character to classify.
+ * @return true if @p symbol is a literal; false otherwise.
+ */
+static bool is_literal(char c){
+    switch (c) {
+    case REGEX_LPAREN:
+    case REGEX_RPAREN:
+    case REGEX_OP_STAR:
+    case REGEX_OP_CONCAT:
+    case REGEX_OP_OR:
+        return false;
+    default:
+        return true;
+    }
+}
 
+/**
+ * @brief Returns whether @p symbol can start an atom.
+    regex r = (regex){ .items = NULL, .size = 0};
+    if (!regex)
+ * @param symbol The character to classify.
+ * @return true if @p symbol can start an atom; false otherwise.
+ */
+static bool starts_atom(char symbol){
+    return is_literal(symbol) || symbol == REGEX_LPAREN;
+}
+
+/**
+ * @brief Returns whether @p symbol can end an atom.
+ * @param symbol The character to classify.
+ * @return true if @p symbol can end an atom; false otherwise.
+ */
+static bool ends_atom(char symbol){
+    return symbol == REGEX_RPAREN || symbol == REGEX_OP_STAR || is_literal(symbol);
+}
 
 /* --- Helpers in regex.h (useful for organization) --- */
 
 
+/**
+ * @brief Normalizes implicit concatenation using a single left-to-right pass.
+ *
+ * Implementation approach:
+ * - Computes one worst-case allocation (`2*n` bytes including `'\0'` when `n>0`) so no reallocation is needed.
+ * - Scans once by index and writes each current symbol.
+ * - Inserts `'.'` between adjacent symbols when `ends_atom(current)` and `starts_atom(next)` are both true.
+ *
+ * Edge-case handling in this implementation:
+ * - `NULL` input fails fast.
+ * - Empty input returns an empty regex.
+ */
 regex from_implicit_to_explicit_concat(const regex *infix_implicit){
+    if (!infix_implicit) return create_regex(NULL);
+    if (!infix_implicit->items && infix_implicit->size > 0) return create_regex(NULL);
 
+    size_t n = infix_implicit->size;
+    if (n == 0) return create_regex("");
+
+    // Worst case when every adjacent pair needs '.': 2*n bytes including '\0'.
+    size_t out_len = 2 * n;
+
+    char *out = malloc(out_len);
+    if (!out) return create_regex(NULL);
+
+    size_t k = 0;
+    for (size_t i = 0; i < n; i++) {
+        char current = infix_implicit->items[i];
+        out[k++] = current;
+
+        if (i + 1 < n) {
+            char next = infix_implicit->items[i + 1];
+            if (ends_atom(current) && starts_atom(next)) {
+                out[k++] = '.';
+            }
+        }
+    }
+
+    out[k] = '\0';
+    return (regex){ .items = out, .size = k };
 }
 
 
