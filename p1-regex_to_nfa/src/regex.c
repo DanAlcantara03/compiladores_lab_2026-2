@@ -1,3 +1,5 @@
+#include "regex.h"
+
 #include <stddef.h>   // size_t
 #include <stdio.h>    // FILE 
 #include <stdbool.h> // bool
@@ -27,7 +29,7 @@ void regex_print(regex r, FILE *out){
 /* --- Principal Functions --- */
 
 regex create_regex(const char *regex_expression){
-
+    
 }
 
 
