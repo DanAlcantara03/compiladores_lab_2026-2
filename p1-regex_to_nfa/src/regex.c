@@ -3,6 +3,7 @@
 #include <stddef.h>   // size_t
 #include <stdio.h>    // FILE 
 #include <stdbool.h> // bool
+#include "data_structures.h" // Stack and Queue
 
 
 /* --- Local Helpers to do the implementation easier --- */
@@ -41,6 +42,33 @@ static bool starts_atom(char symbol){
  */
 static bool ends_atom(char symbol){
     return symbol == REGEX_RPAREN || symbol == REGEX_OP_STAR || is_literal(symbol);
+}
+
+/**
+ * @brief Returns whether @p symbol is one of the supported regex operators.
+ * @param symbol The character to classify.
+ * @return true if @p symbol is `*`, `.`, or `|`; false otherwise.
+ */
+static bool is_operator(char symbol){
+    return symbol == REGEX_OP_STAR || symbol == REGEX_OP_CONCAT || symbol == REGEX_OP_OR;
+}
+
+/**
+ * @brief Returns the precedence level of a regex operator.
+ *
+ * Higher numbers mean higher precedence:
+ * `*` (Kleene star) > `.` (concatenation) > `|` (alternation).
+ *
+ * @param op Operator symbol to evaluate.
+ * @return Integer precedence value, or 0 if @p op is not an operator.
+ */
+static int precedence(regex_symbols op) {
+    switch (op) {
+        case REGEX_OP_STAR:   return 3;
+        case REGEX_OP_CONCAT: return 2;
+        case REGEX_OP_OR:     return 1;
+        default:              return 0;
+    }
 }
 
 /* --- Helpers in regex.h (useful for organization) --- */
@@ -87,9 +115,146 @@ regex from_implicit_to_explicit_concat(const regex *infix_implicit){
     return (regex){ .items = out, .size = k };
 }
 
-
+/**
+ * @brief Converts an explicit-infix regex into postfix form using Shunting-Yard.
+ *
+ * Implementation approach:
+ * - Uses a stack (`operators`) to keep pending operators and parentheses.
+ * - Uses a queue (`output`) to accumulate the postfix stream in emission order.
+ * - Scans the input left-to-right once:
+ *   - literals are emitted directly to `output`,
+ *   - `(` is pushed to `operators`,
+ *   - `)` drains operators until the matching `(`,
+ *   - operators (`*`, `.`, `|`) pop higher/equal precedence operators from the stack before being pushed.
+ * - After scanning, it drains remaining operators to `output`.
+ *
+ * Memory discipline in this implementation:
+ * - Both temporary structures (`operators`, `output`) are always freed before return.
+ * - The final textual postfix buffer is created via `ds_queue_to_string_newest_first`, converted to `regex` with `create_regex`, then immediately released.
+ *
+ * Validation and fail-fast behavior:
+ * - Returns an empty regex on invalid input pointers, allocation/status failures, unsupported symbols, or mismatched parentheses.
+ * - Empty input maps to empty output.
+ */
 regex regex_explicit_infix_to_postfix(const regex *infix_explicit){
+    /* --- Part 1 - Initial validation and preparation --- */
 
+    // 1.1 Validation via the input descriptor
+    if (!infix_explicit) return create_regex(NULL);
+    if (!infix_explicit->items && infix_explicit->size > 0) return create_regex(NULL);
+
+    // 1.2 Void and auxiliar case
+    size_t n = infix_explicit->size;
+    if (n == 0) return create_regex("");
+
+    // Every input token can be emitted at most once, plus '\0' in the string conversion.
+    size_t out_len = n + 1;
+
+    //1.3 Initial exit state (out) and temp state (*postfix_str)
+    regex out = create_regex(NULL);
+    char *postfix_str = NULL;
+
+    // 1.4 Initialize and reserve Auxiliar structures.
+
+    // Operator stack keeps pending operators and parentheses.
+    ds_stack operators = {0};
+    if (ds_stack_init(&operators, sizeof(char)) != DS_OK) goto cleanup;
+    if (ds_stack_reserve(&operators, out_len) != DS_OK) goto cleanup;
+
+    // Output queue stores postfix symbols in final emission order.
+    ds_queue output = {0};
+    if (ds_queue_init(&output, sizeof(char)) != DS_OK) goto cleanup;
+    if (ds_queue_reserve(&output, out_len) != DS_OK) goto cleanup;
+
+    /* --- Part 2 - Principal loop (token by token) --- */
+
+    // 2.1 it goes from 0 to n-1
+    for (size_t i = 0; i < n; i++) {
+        char token = infix_explicit->items[i];
+
+        //2.2 (Literals case) Literals go straight to output.
+        if (is_literal(token)) {
+            if (ds_queue_enqueue(&output, &token) != DS_OK) goto cleanup;
+            continue;
+        }
+
+        //2.3 (Opens paren case) Opening parenthesis starts a nested scope.
+        if (token == REGEX_LPAREN) {
+            if (ds_stack_push(&operators, &token) != DS_OK) goto cleanup;
+            continue;
+        }
+
+        //2.4 (Closes paren case)
+        if (token == REGEX_RPAREN) {
+            bool found_lparen = false;
+
+            // Close scope: emit operators until matching '('.
+            while (!ds_stack_empty(&operators)) {
+                char top = '\0';
+                if (ds_stack_pop(&operators, &top) != DS_OK) goto cleanup;
+
+                if (top == REGEX_LPAREN) {
+                    found_lparen = true;
+                    break;
+                }
+
+                if (ds_queue_enqueue(&output, &top) != DS_OK) goto cleanup;
+            }
+            // If it finishes and doesn't find the operator
+            if (!found_lparen) goto cleanup;
+            continue;
+        }
+
+        //2.5 (Operators case)
+
+        // Any remaining non-literal token must be a supported operator.
+        if (!is_operator(token)) goto cleanup;
+
+        // Pop higher/equal precedence operators (left-associative behavior).
+        while (!ds_stack_empty(&operators)) {
+            char top = '\0';
+            if (ds_stack_peek(&operators, &top) != DS_OK) goto cleanup;
+
+            if (top == REGEX_LPAREN) break;
+
+            // Implements left associativity for operators with the same precedence, because when precedence(top) == precedence(token), it also pops from the stack.
+            if (precedence((regex_symbols)top) < precedence((regex_symbols)token)) break;
+
+            if (ds_stack_pop(&operators, &top) != DS_OK) goto cleanup;
+            if (ds_queue_enqueue(&output, &top) != DS_OK) goto cleanup;
+        }
+
+        if (ds_stack_push(&operators, &token) != DS_OK) goto cleanup;
+    }
+
+    /* --- Part 3 - Pop everything off the stack --- */
+
+    // Flush remaining operators; parentheses here mean invalid expression.
+    while (!ds_stack_empty(&operators)) {
+        char top = '\0';
+        if (ds_stack_pop(&operators, &top) != DS_OK) goto cleanup;
+
+        if (top == REGEX_LPAREN || top == REGEX_RPAREN) goto cleanup;
+
+        if (ds_queue_enqueue(&output, &top) != DS_OK) goto cleanup;
+    }
+
+    /* --- Part 4 - Materializing the result --- */
+
+    // 4.1 Serializes the queue to a string
+    postfix_str = ds_queue_to_string_newest_first(&output);
+    if (!postfix_str) goto cleanup;
+
+    // 4.2 create a regex based on the queue string
+    out = create_regex(postfix_str);
+
+    /* --- Final part - Unified cleanup --- */
+
+cleanup:
+    free(postfix_str);
+    ds_queue_free(&output);
+    ds_stack_free(&operators);
+    return out;
 }
 
 
