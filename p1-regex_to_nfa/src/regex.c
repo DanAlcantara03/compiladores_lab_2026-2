@@ -257,9 +257,20 @@ cleanup:
     return out;
 }
 
-
+/**
+ * @brief Emits the regex buffer as a single debug line.
+ *
+ * Implementation details:
+ * - Resolves the destination stream with a simple fallback policy: use the caller stream when present, otherwise default to `stdout`.
+ * - Traverses `r.items` linearly (`0 .. size-1`) and writes each stored symbol with `fputc`, avoiding temporary string assembly.
+ * - Appends a final newline unconditionally so each call produces one complete line in logs/tests.
+ */
 void regex_print(regex r, FILE *out){
-    
+    FILE *dest = out ? out : stdout;
+    for (size_t i = 0; i < r.size; i++) {
+        fputc(r.items[i], dest);
+    }
+    fputc('\n', dest);
 }
 
 /* --- Principal Functions --- */
