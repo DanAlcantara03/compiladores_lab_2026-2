@@ -28,3 +28,16 @@ target_include_directories(data_structures_tests PRIVATE
 )
 
 add_test(NAME data_structures_tests COMMAND data_structures_tests)
+
+# ---- Regex tests ----
+
+add_executable(regex_tests
+    ./tests/regex_test.c
+    ./src/regex.c
+)
+
+target_include_directories(regex_tests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+add_test(NAME regex_tests COMMAND regex_tests)
