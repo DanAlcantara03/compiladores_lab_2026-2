@@ -33,6 +33,7 @@ add_test(NAME data_structures_tests COMMAND data_structures_tests)
 
 add_executable(regex_tests
     ./tests/regex_test.c
+    ./src/data_structures.c
     ./src/regex.c
 )
 
