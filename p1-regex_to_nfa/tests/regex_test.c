@@ -110,6 +110,9 @@ static void assert_regex_case(regex_fn r_f,const char *src, const char *expected
     regex_free(&in);
 }
 
+/*
+ * Verifies that a stream contains exactly the expected bytes and nothing else.
+ */
 static void assert_stream_equals(FILE *stream, const char *expected, const char *context) {
     assert(stream != NULL);
     assert(expected != NULL);
@@ -134,6 +137,7 @@ static void assert_stream_equals(FILE *stream, const char *expected, const char 
  * For each test I follow the test_<function>_<scenario> pattern.
  */
 
+/* create_regex should return an empty descriptor for NULL input. */
 static void test_create_regex_null_input(void) {
     regex out = create_regex(NULL);
     assert(out.size == 0);
@@ -141,6 +145,7 @@ static void test_create_regex_null_input(void) {
     regex_free(&out);
 }
 
+/* create_regex should produce a valid empty regex for "". */
 static void test_create_regex_empty_string(void) {
     regex out = create_regex("");
     assert_regex_invariant(out,"create_regex(\"\")");
@@ -148,6 +153,7 @@ static void test_create_regex_empty_string(void) {
     regex_free(&out);
 }
 
+/* create_regex must deep-copy input data. */
 static void test_create_regex_copies_input(void) {
     char input[] = "ab|c";
     regex out = create_regex(input);
@@ -157,6 +163,7 @@ static void test_create_regex_copies_input(void) {
     regex_free(&out);
 }
 
+/* regex_free should be idempotent and leave a reset descriptor. */
 static void test_regex_free_resets_state(void) {
     regex r = create_regex("abc");
     regex_free(&r);
@@ -165,6 +172,7 @@ static void test_regex_free_resets_state(void) {
     assert(r.size == 0);
 }
 
+/* from_implicit_to_explicit_concat should insert explicit '.' operators. */
 static void test_from_implicit_to_explicit_concat (void){
     assert_regex_case(from_implicit_to_explicit_concat,"ab","a.b", "from_implicit_to_explicit_concat basic");
     assert_regex_case(from_implicit_to_explicit_concat,"a(b|c)*d","a.(b|c)*.d", "from_implicit_to_explicit_concat complex 1");
@@ -174,6 +182,7 @@ static void test_from_implicit_to_explicit_concat (void){
 }
 
 
+/* regex_explicit_infix_to_postfix should preserve operator precedence/associativity. */
 static void test_regex_explicit_infix_to_postfix(void) {
     assert_regex_case(regex_explicit_infix_to_postfix, "a", "a", "regex_explicit_infix_to_postfix basic_1");
     assert_regex_case(regex_explicit_infix_to_postfix, "a*", "a*", "regex_explicit_infix_to_postfix basic_2");
@@ -186,6 +195,7 @@ static void test_regex_explicit_infix_to_postfix(void) {
     assert_regex_case(regex_explicit_infix_to_postfix, "a*.b.(c|d).e|f", "a*b.cd|.e.f|", "regex_explicit_infix_to_postfix complex_4");
 }
 
+/* parse_regex should cover implicit-concat + postfix conversion end-to-end. */
 static void test_parse_regex_end_to_end(void) {
     assert_regex_case(parse_regex, "a", "a", "parse_regex end-to-end basic_1");
     assert_regex_case(parse_regex, "a*", "a*", "parse_regex end-to-end basic_2");
@@ -198,6 +208,7 @@ static void test_parse_regex_end_to_end(void) {
     assert_regex_case(parse_regex, "a*b(c|d)e|f", "a*b.cd|.e.f|", "parse_regex end-to-end complex_4");
 }
 
+/* parse_regex should safely reject malformed input cases. */
 static void test_parse_regex_invalid_input(void) {
     /* NULL pointer input */
     regex out = parse_regex(NULL);
@@ -215,6 +226,7 @@ static void test_parse_regex_invalid_input(void) {
     assert_regex_case(parse_regex,"((a|b)", "", "parse_regex invalid: nested unclosed paren");
 }
 
+/* regex_print should write correct output to explicit stream and stdout fallback. */
 static void test_regex_print(void) {
     /* Case 1: explicit output stream with regular content */
     regex r = create_regex("ab|c");
@@ -260,7 +272,7 @@ static void test_regex_print(void) {
 
     char captured[64] = {0};
     size_t used = 0;
-    ssize_t nread = 0;
+    size_t nread = 0;
 
     while ((nread = read(pipefd[0], captured + used, sizeof(captured) - 1 - used)) > 0) {
         used += (size_t)nread;
@@ -278,6 +290,7 @@ static void test_regex_print(void) {
     regex_free(&r);
 }
 
+/* Executes the regex test suite and prints a summary line. */
 int main(void) {
     int total = 0;
     int passed = 0;
