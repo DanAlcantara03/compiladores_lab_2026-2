@@ -137,20 +137,22 @@ uint8_t new_state(states_manager *manager) {
 }
 
 /**
- * @brief Function to add a transition to the states manager. This function creates a new transition
- * struct and adds it to the list of transitions.
+ * @brief Function to add a transition to the states manager. This function creates a new transition struct and adds it to the list of transitions.
  * @param manager Pointer to the states_manager struct that manages the states and transitions
  * @param from_state The state from which the transition originates
  * @param symbol The symbol on which the transition occurs
  * @param to_state The state to which the transition leads
  */
-void add_transition(states_manager *manager, uint8_t from_state, char symbol, uint8_t to_state)
-{
-    (void)manager;
-    (void)from_state;
-    (void)symbol;
-    (void)to_state;
-    // TODO: Append transition record to manager->transitions and increment count.
+void add_transition(states_manager *manager, uint8_t from_state, char symbol, uint8_t to_state) {
+    if (!manager_is_valid(manager)) return;
+    if (manager->transitions_count == UINT8_MAX) return;
+    if (from_state >= manager->next_id || to_state >= manager->next_id) return;
+
+    manager->transitions[manager->transitions_count] = (t_transition){
+        .from_state = from_state,
+        .symbol = symbol,
+        .to_state = to_state};
+    manager->transitions_count ++;
 }
 
 /**
