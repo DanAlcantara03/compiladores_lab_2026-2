@@ -156,25 +156,19 @@ void add_transition(states_manager *manager, uint8_t from_state, char symbol, ui
 }
 
 /**
- * @brief Function to create a new NFA that represents the concatenation of two NFAs. This function
- * takes two NFAs as input, creates a new NFA that has the start state of the first NFA and the end
- * state of the second NFA, and adds an epsilon transition from the end state of the first NFA to
- * the start state of the second NFA.
+ * @brief Function to create a new NFA that represents the concatenation of two NFAs. This function takes two NFAs as input, creates a new NFA that has the start state of the first NFA and the end state of the second NFA, and adds an epsilon transition from the end state of the first NFA to the start state of the second NFA.
  * @param manager Pointer to the states_manager struct that manages the states and transitions
  * @param a Pointer to the first NFA
  * @param b Pointer to the second NFA
  * @return A new NFA struct representing the concatenation of the two input NFAs
  */
-t_nfa concat_nfa(states_manager *manager, t_nfa *a, t_nfa *b)
-{
-    (void)manager;
-    (void)a;
-    (void)b;
-    // TODO: Build concatenation fragment.
-    // Suggested algorithm:
-    // 1) start = a->start, end = b->end.
-    // 2) Add epsilon transition a->end -> b->start.
+t_nfa concat_nfa(states_manager *manager, t_nfa *a, t_nfa *b) {
     t_nfa result = {0};
+    if (!manager_is_valid(manager)) return result;
+
+    result.start = a->start;
+    result.end = b->end;
+    add_transition(manager, a->end, EPSILON_SYMBOL, b->start);
     return result;
 }
 
