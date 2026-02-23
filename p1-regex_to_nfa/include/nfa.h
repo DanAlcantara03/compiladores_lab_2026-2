@@ -29,6 +29,31 @@ typedef struct alphabet
 } alphabet;
 
 /**
+ * @brief Function to initialize an alphabet with default values.
+ * This function prepares an empty alphabet by clearing symbol storage,
+ * resetting the character-to-column map, and setting the symbol counter to zero.
+ * @return An initialized alphabet struct ready to receive symbols.
+ */
+alphabet alphabet_init(void);
+
+/**
+ * @brief Function to initialize an alphabet from a null-terminated C string.
+ * This function reads symbols from the input string and inserts unique values into the alphabet in left-to-right order.
+ * @param symbols Null-terminated input string containing symbols to include.
+ * @return An initialized alphabet struct populated from the given string.
+ */
+alphabet alphabet_init_from_cstr(const char *symbols);
+
+/**
+ * @brief Function to initialize an alphabet from a char array.
+ * This function reads exactly `count` entries from the input array and inserts unique values into the alphabet in array order.
+ * @param symbols Input array containing symbols to include.
+ * @param count Number of entries to read from the input array.
+ * @return An initialized alphabet struct populated from the given array.
+ */
+alphabet alphabet_init_from_array(const char *symbols, size_t count);
+
+/**
  * @brief Struct to represent a non-deterministic finite automaton (NFA). It contains the start state,
  * a bitset representing the accept states, the total number of states, the alphabet used by the NFA,
  * a transition table, and a cache for epsilon closures. The transition table is a 2D array where each
@@ -44,14 +69,28 @@ typedef struct nfa
     uint8_t states;
     /* Alphabet used by the NFA */
     alphabet nfa_alphabet;
-    /** Transition table. Each entry is a bitset representing the set of
-     * states reachable from the current state on the given symbol. A
-     * MAX_STATES x nfa_alphabet.symbol_count matrix. */
+    /** Transition table. Each entry is a bitset representing the set of states reachable from the current state on the given symbol. A MAX_STATES x nfa_alphabet.symbol_count matrix. */
     uint64_t** transitions;
     /* Cache for epsilon closures. Each entry is a bitset representing
     the epsilon closure of the corresponding state. */
     uint64_t* epsilon_closure_cache;
 } nfa;
+
+/**
+ * @brief Function to initialize an empty NFA instance.
+ * This function returns a safe default NFA value that can be used as the initial
+ * state before building transitions and accept states.
+ * @return An initialized NFA struct with default values.
+ */
+nfa nfa_init(void);
+
+/**
+ * @brief Function to release dynamic memory owned by an NFA instance.
+ * This function must free transition-related buffers and reset the NFA to a safe
+ * state to avoid dangling pointers and double-free issues.
+ * @param automaton Pointer to the NFA instance to free.
+ */
+void nfa_free(nfa *automaton);
 
 /** 
  * @brief Convert a regular expression represented as a regex struct into an NFA.
@@ -73,5 +112,13 @@ nfa regex_to_nfa(const regex r);
  * @return true if the NFA accepts the input string, false otherwise
  */
 bool match_nfa(nfa automaton, const char *input, size_t input_length);
+
+/**
+ * @brief Function to print an NFA in a human-readable format.
+ * This helper is useful for debugging transition tables, start state and accept states.
+ * @param automaton The NFA to print.
+ * @param out Output stream destination, or NULL to use stdout.
+ */
+void nfa_print(nfa automaton, FILE *out);
 
 #endif // NFA_H
