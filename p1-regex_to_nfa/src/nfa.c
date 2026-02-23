@@ -110,15 +110,12 @@ bool add_symbol(alphabet *a, char symbol) {
 }
 
 /**
- * @brief Function to create a new states manager. This function initializes a states_manager struct
- * with default values, including setting the next available state ID to 0 and initializing the
- * alphabet.
+ * @brief Function to create a new states manager. This function initializes a states_manager struct with default values, including setting the next available state ID to 0 and initializing the alphabet.
  * @return A new states_manager struct initialized with default values
  */
-states_manager new_states_manager()
-{
-    // TODO: Initialize state manager with empty states/transitions and fresh alphabet.
+states_manager new_states_manager() {
     states_manager manager = {0};
+    manager.manager_alphabet = new_alphabet();
     return manager;
 }
 
