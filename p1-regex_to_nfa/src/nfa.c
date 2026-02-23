@@ -48,17 +48,18 @@ void calculate_epsilon_closure(nfa *automaton);
 nfa t_nfa_to_nfa(t_nfa temp_nfa, states_manager manager);
 
 /**
- * @brief Function to create a new alphabet. This function initializes an alphabet struct with
- * default values, including setting the epsilon symbol and initializing the character-to-column
- * mapping.
+ * @brief Validates manager pointer and internal counters.
+ *
+ * @param manager Pointer to validate.
+ * @return true when the pointer is non-NULL and counters are in range.
  */
-alphabet new_alphabet()
-{
-    // TODO: Initialize alphabet with epsilon at column 0.
-    // Suggested algorithm:
-    // 1) Initialize char_to_col to -1 and symbols to 0.
-    // 2) Place EPSILON_SYMBOL at symbols[0].
-    // 3) Map EPSILON_SYMBOL -> 0 and set symbol_count = 1.
+static bool manager_is_valid(const states_manager *manager) {
+    if (manager == NULL) return false;
+    if (manager->states_count > MAX_STATES) return false;
+    if (manager->next_id > MAX_STATES) return false;
+    return true;
+}
+
     alphabet a = {0};
     return a;
 }
