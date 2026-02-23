@@ -208,25 +208,19 @@ t_nfa union_nfa(states_manager *manager, t_nfa *a, t_nfa *b) {
 
 /**
  * @brief Function to create a new NFA that represents the positive closure of an NFA.
- * This function takes an NFA as input, creates a new NFA that has a new start state and
- * a new end state, and adds epsilon transitions from the new start state to the start
- * state of the input NFA, from the end state of the input NFA to the start state of the
- * input NFA, and from the end state of the input NFA to the new end state.
+ * This function takes an NFA as input, creates a new NFA that has a new start state and a new end state, and adds epsilon transitions from the new start state to the start state of the input NFA, from the end state of the input NFA to the start state of the input NFA, and from the end state of the input NFA to the new end state.
  * @param manager Pointer to the states_manager struct that manages the states and transitions
  * @param a Pointer to the input NFA
  * @return A new NFA struct representing the positive closure of the input NFA
  */
-t_nfa positive_closure_nfa(states_manager *manager, t_nfa *a)
-{
-    (void)manager;
-    (void)a;
-    // TODO: Build positive-closure fragment.
-    // Suggested algorithm:
-    // 1) Create new start/end.
-    // 2) Epsilon start -> a.start.
-    // 3) Epsilon a.end -> a.start (loop).
-    // 4) Epsilon a.end -> end.
+t_nfa positive_closure_nfa(states_manager *manager, t_nfa *a) {
     t_nfa result = {0};
+    if (!manager_is_valid(manager)) return result;
+    result.start = new_state(manager);
+    result.end = new_state(manager);
+    add_transition(manager, result.start, EPSILON_SYMBOL, a->start);
+    add_transition(manager, a->end, EPSILON_SYMBOL, a->start);
+    add_transition(manager, a->end, EPSILON_SYMBOL, result.end);
     return result;
 }
 
