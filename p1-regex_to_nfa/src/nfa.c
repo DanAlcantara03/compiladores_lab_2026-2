@@ -188,22 +188,21 @@ t_nfa symbol_nfa(states_manager *manager, char symbol) {
 }
 
 /**
- * @brief Function to create a new NFA that represents the union of two NFAs. This function takes two NFAs
- * as input, creates a new NFA that has a new start state and a new end state, and adds epsilon transitions
- * from the new start state to the start states of both input NFAs, and from the end states of both input
- * NFAs to the new end state.
+ * @brief Function to create a new NFA that represents the union of two NFAs. This function takes two NFAs as input, creates a new NFA that has a new start state and a new end state, and adds epsilon transitions from the new start state to the start states of both input NFAs, and from the end states of both input NFAs to the new end state.
  * @param manager Pointer to the states_manager struct that manages the states and transitions
  * @param a Pointer to the first NFA
  * @param b Pointer to the second NFA
  * @return A new NFA struct representing the union of the two input NFAs
  */
-t_nfa union_nfa(states_manager *manager, t_nfa *a, t_nfa *b)
-{
-    (void)manager;
-    (void)a;
-    (void)b;
-    // TODO: Build alternation fragment with new start/end and 4 epsilon transitions.
+t_nfa union_nfa(states_manager *manager, t_nfa *a, t_nfa *b) {
     t_nfa result = {0};
+    if (!manager_is_valid(manager)) return result;
+    result.start = new_state(manager);
+    result.end = new_state(manager);
+    add_transition(manager, result.start, EPSILON_SYMBOL, a->start);
+    add_transition(manager, a->end, EPSILON_SYMBOL, result.end);
+    add_transition(manager, result.start, EPSILON_SYMBOL, b->start);
+    add_transition(manager, b->end, EPSILON_SYMBOL, result.end);
     return result;
 }
 
