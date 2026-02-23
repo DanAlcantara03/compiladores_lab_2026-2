@@ -77,21 +77,36 @@ alphabet new_alphabet() {
 }
 
 /**
- * @brief Function to add a symbol to the alphabet. This function checks if the symbol is already
- * in the alphabet, and if not, it adds the symbol to the symbols array and updates the
- * character-to-column mapping.
- * @param a Pointer to the alphabet struct to which the symbol should be added
- * @param symbol The symbol to add to the alphabet
+ * @brief Function to add a symbol to the alphabet. This function checks if the symbol is already in teh alphabet, and if not, it adds the symbol to the symbols array and updates the character-to-column mapping
+ *
+ * The function is fail-safe and returns early when:
+ * - the alphabet pointer is NULL,
+ * - the input is '\0',
+ * - the symbol already exists,
+ * - the symbol is the epsilon marker,
+ * - the alphabet is full (256 entries).
+ *
+ * @param a Pointer to the target alphabet.
+ * @param symbol Symbol to insert.
+ * @return true if the symbol was added, false otherwise.
  */
-void add_symbol(alphabet *a, char symbol)
-{
-    (void)a;
-    (void)symbol;
-    // TODO: Insert non-epsilon symbol if absent.
-    // Suggested algorithm:
-    // 1) Reject EPSILON_SYMBOL and duplicates via char_to_col lookup.
-    // 2) Append symbol into symbols[symbol_count].
-    // 3) Update char_to_col and increment symbol_count.
+bool add_symbol(alphabet *a, char symbol) {
+    if (a == NULL) return false;
+    unsigned char u_symbol = (unsigned char) symbol;
+    /* Ignore C-string terminator. */
+    if (symbol == '\0') return false;
+    /* Keep symbols unique. */
+    if (a->char_to_col[u_symbol] != -1) return false;
+    /* Epsilon stays reserved at column 0; do not insert it again. */
+    if (u_symbol == (unsigned char)EPSILON_SYMBOL) return false;
+    /* Defensive bound check for fixed-size storage. */
+    if (a->symbol_count >= MAX_SYMBOLS) return false;
+
+    /* Append at the next column and update reverse mapping. */
+    a->symbols[a->symbol_count] = symbol;
+    a->char_to_col[u_symbol] = a->symbol_count;
+    a->symbol_count++;
+    return true;
 }
 
 /**
