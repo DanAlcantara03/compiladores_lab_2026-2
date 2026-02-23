@@ -226,22 +226,18 @@ t_nfa positive_closure_nfa(states_manager *manager, t_nfa *a) {
 
 
 /**
- * @brief Function to create a new NFA that represents the Kleene closure of an NFA. This function
- * takes an NFA as input, creates a new NFA that has a new start state and a new end state, and adds
- * epsilon transitions from the new start state to the start state of the input NFA, from
- * the end state of the input NFA to the start state of the input NFA, from the end state of the input
- * NFA to the new end state, and from the new start state to the new end state (to allow for the empty
- * string).
+ * @brief Function to create a new NFA that represents the Kleene closure of an NFA. 
+ * This function takes an NFA as input, creates a new NFA that has a new start state and a new end state, and adds epsilon transitions from the new start state to the start state of the input NFA, from the end state of the input NFA to the start state of the input NFA, from the end state of the input NFA to the new end state, and from the new start state to the new end state (to allow for the empty string).
  * @param manager Pointer to the states_manager struct that manages the states and transitions
  * @param a Pointer to the input NFA
  * @return A new NFA struct representing the Kleene closure of the input NFA
  */
 t_nfa kleene_closure_nfa(states_manager *manager, t_nfa *a)
 {
-    (void)manager;
-    (void)a;
-    // TODO: Build Kleene-star fragment (positive closure + epsilon start->end).
     t_nfa result = {0};
+    if (!manager_is_valid(manager)) return result; 
+    result = positive_closure_nfa(manager, a);
+    add_transition(manager, result.start, EPSILON_SYMBOL, result.end);
     return result;
 }
 
