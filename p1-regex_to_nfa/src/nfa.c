@@ -242,19 +242,16 @@ t_nfa kleene_closure_nfa(states_manager *manager, t_nfa *a)
 }
 
 /**
- * @brief Function to create a new NFA that represents the optionality of an NFA. This function takes
- * an NFA as input, creates a new NFA that adds epsilon transitions from the start state of the input
- * NFA to the end state (to allow for the empty string).
+ * @brief Function to create a new NFA that represents the optionality of an NFA. This function takes an NFA as input, creates a new NFA that adds epsilon transitions from the start state of the input NFA to the end state (to allow for the empty string).
  * @param manager Pointer to the states_manager struct that manages the states and transitions
  * @param a Pointer to the input NFA
  * @return A new NFA struct representing the optionality of the input NFA
  */
 t_nfa optional_nfa(states_manager *manager, t_nfa *a)
 {
-    (void)manager;
-    (void)a;
-    // TODO: Build optional fragment by adding epsilon path that skips sub-NFA.
-    t_nfa result = {0};
+    t_nfa result = *a;
+    if (!manager_is_valid(manager)) return result;
+    add_transition(manager, result.start, EPSILON_SYMBOL, result.end);
     return result;
 }
 
