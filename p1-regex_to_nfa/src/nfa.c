@@ -120,16 +120,20 @@ states_manager new_states_manager() {
 }
 
 /**
- * @brief Function to create a new state in the states manager. This function assigns a new state ID,
- * adds it to the list of states, and returns the new state ID.
+ * @brief Function to create a new state in the states manager. This function assigns a new state ID, adds it to the list of states, and returns the new state ID.
  * @param manager Pointer to the states_manager struct that manages the states
  * @return The ID of the newly created state
  */
-uint8_t new_state(states_manager *manager)
-{
-    (void)manager;
-    // TODO: Allocate a new state id, store in manager->states, and advance counters.
-    return 0;
+uint8_t new_state(states_manager *manager) {
+    if (!manager_is_valid(manager)) return INVALID_NFA_STATE;
+    if (manager->states_count >= MAX_STATES) return INVALID_NFA_STATE;
+    if (manager->next_id >= MAX_STATES) return INVALID_NFA_STATE;
+
+    uint8_t id = manager->next_id;
+    manager->states[manager->states_count] = id;
+    manager->states_count ++;
+    manager->next_id++;
+    return id;
 }
 
 /**
