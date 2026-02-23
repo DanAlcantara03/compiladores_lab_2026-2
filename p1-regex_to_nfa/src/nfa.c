@@ -173,19 +173,17 @@ t_nfa concat_nfa(states_manager *manager, t_nfa *a, t_nfa *b) {
 }
 
 /**
- * @brief Function to create a new NFA that represents a single symbol. This function creates a new NFA
- * with a start state and an end state, and adds a transition from the start state to the end state on
- * the given symbol.
+ * @brief Function to create a new NFA that represents a single symbol. This function creates a new NFA with a start state and an end state, and adds a transition from the start state to the end state on the given symbol.
  * @param manager Pointer to the states_manager struct that manages the states and transitions
  * @param symbol The symbol for which the NFA should be created
  * @return A new NFA struct representing the given symbol
  */
-t_nfa symbol_nfa(states_manager *manager, char symbol)
-{
-    (void)manager;
-    (void)symbol;
-    // TODO: Build a 2-state fragment with one symbol transition start -> end.
+t_nfa symbol_nfa(states_manager *manager, char symbol) {
     t_nfa result = {0};
+    if (!manager_is_valid(manager)) return result;
+    result.start = new_state(manager);
+    result.end = new_state(manager);
+    add_transition(manager, result.start, symbol, result.end);
     return result;
 }
 
