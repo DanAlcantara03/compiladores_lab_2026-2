@@ -60,7 +60,19 @@ static bool manager_is_valid(const states_manager *manager) {
     return true;
 }
 
+/**
+ * @brief Function to create a new alphabet. This function initializes an alphabet struct with default values, including setting the epsilon symbol and initializing the character-to-column mapping.
+ */
+alphabet new_alphabet() {
     alphabet a = {0};
+
+    for (size_t i = 0; i < sizeof(a.char_to_col) / sizeof(a.char_to_col[0]); i++) {
+        a.char_to_col[i] = -1;
+    }
+
+    a.symbols[0] = EPSILON_SYMBOL;
+    a.char_to_col[(unsigned char) EPSILON_SYMBOL] = 0;
+    a.symbol_count = 1;
     return a;
 }
 
