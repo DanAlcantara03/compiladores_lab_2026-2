@@ -11,6 +11,9 @@
 #include "data_structures.h"
 
 #define MAX_STATES 64
+#define MAX_SYMBOLS 256
+#define EPSILON_SYMBOL '\x01'
+#define INVALID_NFA_STATE UINT8_MAX
 
 
 /**
@@ -34,7 +37,7 @@ typedef struct alphabet
  * resetting the character-to-column map, and setting the symbol counter to zero.
  * @return An initialized alphabet struct ready to receive symbols.
  */
-alphabet alphabet_init(void);
+alphabet new_alphabet();
 
 /**
  * @brief Function to initialize an alphabet from a null-terminated C string.
