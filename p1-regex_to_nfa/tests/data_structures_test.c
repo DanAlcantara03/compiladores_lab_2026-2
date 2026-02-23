@@ -5,9 +5,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Minimal test harness for stack, queue, and set APIs. */
 typedef void (*test_fn)(void);
 
-/* Simple test helper */
+/* Asserts that a status code matches the expected value. */
 static void test_status(ds_status got, ds_status expected, const char *msg) {
     if (got != expected) {
         fprintf(stderr, "FAIL: %s (got=%d expected=%d)\n", msg, (int)got, (int)expected);
@@ -15,6 +16,7 @@ static void test_status(ds_status got, ds_status expected, const char *msg) {
     }
 }
 
+/* Runs one test function and updates pass/total counters. */
 static void run_test(test_fn fn, const char *name, int *passed, int *total) {
     (*total)++;
     fn();
@@ -22,6 +24,7 @@ static void run_test(test_fn fn, const char *name, int *passed, int *total) {
     printf("[PASS] %s\n", name);
 }
 
+/* Validates basic stack behavior: push/pop/peek, size, and empty-error path. */
 static void test_stack_int_basic(void) {
     ds_stack s;
     test_status(ds_stack_init(&s, sizeof(int)), DS_OK, "stack init");
@@ -53,6 +56,7 @@ static void test_stack_int_basic(void) {
     ds_stack_free(&s);
 }
 
+/* Stresses stack growth logic by pushing many chars. */
 static void test_stack_char_growth(void) {
     ds_stack s;
     test_status(ds_stack_init(&s, sizeof(char)), DS_OK, "stack init char");
@@ -71,6 +75,7 @@ static void test_stack_char_growth(void) {
     ds_stack_free(&s);
 }
 
+/* Validates FIFO behavior plus front/back peek semantics. */
 static void test_queue_int_basic(void) {
     ds_queue q;
     test_status(ds_queue_init(&q, sizeof(int)), DS_OK, "queue init");
@@ -103,6 +108,7 @@ static void test_queue_int_basic(void) {
     ds_queue_free(&q);
 }
 
+/* Exercises circular wraparound and repeated enqueue/dequeue cycles. */
 static void test_queue_wraparound_and_growth(void) {
     ds_queue q;
     test_status(ds_queue_init(&q, sizeof(int)), DS_OK, "queue init");
@@ -126,6 +132,7 @@ static void test_queue_wraparound_and_growth(void) {
     ds_queue_free(&q);
 }
 
+/* Verifies queue-to-string helper preserves FIFO order, including wraparound. */
 static void test_queue_to_string_fifo_order(void) {
     ds_queue q;
     test_status(ds_queue_init(&q, sizeof(char)), DS_OK, "queue init char");
@@ -161,6 +168,7 @@ static void test_queue_to_string_fifo_order(void) {
     ds_queue_free(&q);
 }
 
+/* Checks representative bad-argument handling for stack/queue init. */
 static void test_bad_args(void) {
     ds_stack s;
     test_status(ds_stack_init(&s, 0), DS_ERR_BADARG, "stack init bad elem_size");
@@ -169,15 +177,18 @@ static void test_bad_args(void) {
     test_status(ds_queue_init(&q, 0), DS_ERR_BADARG, "queue init bad elem_size");
 }
 
+/* Utility for readable int-membership assertions in set tests. */
 static bool set_contains_int(const ds_set *set, int value) {
     return ds_set_contains(set, &value);
 }
 
+/* Utility for readable string-membership assertions in set tests. */
 static bool set_contains_cstr(const ds_set *set, const char *value) {
     const char *needle = value;
     return ds_set_contains(set, &needle);
 }
 
+/* Validates uniqueness guarantees and clear/empty behavior for int sets. */
 static void test_set_int_basic_and_uniqueness(void) {
     ds_set set;
     test_status(ds_set_init(&set, sizeof(int), NULL, NULL), DS_OK, "set init int");
@@ -200,6 +211,7 @@ static void test_set_int_basic_and_uniqueness(void) {
     ds_set_free(&set);
 }
 
+/* Validates set construction from a plain array with duplicate removal. */
 static void test_set_init_from_array(void) {
     const int array[] = { 9, 1, 9, 2, 3, 1, 2, 5 };
 
@@ -220,6 +232,7 @@ static void test_set_init_from_array(void) {
     ds_set_free(&set);
 }
 
+/* Validates generic source-based set initialization via ds_set_source. */
 static void test_set_init_from_generic_source(void) {
     const int array[] = { 10, 10, 20, 30 };
     ds_set_source source = {
@@ -240,6 +253,7 @@ static void test_set_init_from_generic_source(void) {
     ds_set_free(&set);
 }
 
+/* Validates set construction from stack contents. */
 static void test_set_init_from_stack(void) {
     ds_stack stack;
     test_status(ds_stack_init(&stack, sizeof(int)), DS_OK, "stack init for set");
@@ -261,6 +275,7 @@ static void test_set_init_from_stack(void) {
     ds_stack_free(&stack);
 }
 
+/* Validates set construction from queue contents, including wrapped queue state. */
 static void test_set_init_from_queue(void) {
     ds_queue queue;
     test_status(ds_queue_init(&queue, sizeof(int)), DS_OK, "queue init for set");
@@ -289,6 +304,7 @@ static void test_set_init_from_queue(void) {
     ds_queue_free(&queue);
 }
 
+/* Validates token-based set construction from strings and duplicate filtering. */
 static void test_set_init_from_string(void) {
     ds_set set;
     test_status(
@@ -311,6 +327,7 @@ static void test_set_init_from_string(void) {
     ds_set_free(&set);
 }
 
+/* Covers bad-argument paths for set constructors and init helpers. */
 static void test_set_bad_args(void) {
     ds_set set;
     test_status(ds_set_init(NULL, sizeof(int), NULL, NULL), DS_ERR_BADARG, "set init null ptr");
@@ -320,6 +337,7 @@ static void test_set_bad_args(void) {
     test_status(ds_set_init_from_array(&set, sizeof(int), NULL, 3), DS_ERR_BADARG, "set init_from_array null data");
 }
 
+/* Runs all test groups and prints a simple summary. */
 int main(void) {
     int total = 0;
     int passed = 0;
