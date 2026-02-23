@@ -1,42 +1,31 @@
 #include "nfa.h"
 
 /**
- * @brief Struct to represent a transition in the NFA. It contains the source state,
- * the symbol for the transition, and the destination state. This struct is used as
- * an intermediate representation of transitions while building the NFA.
+ * @brief Struct to represent a transition in the NFA. It contains the source state, the symbol for the transition, and the destination state. This struct is used as an intermediate representation of transitions while building the NFA.
  */
-struct temp_transition
-{
+typedef struct temp_transition {
     /* Represents a transition in the NFA */
     uint8_t from_state;
     /* The symbol for the transition */
     char symbol;
     /* The state to which the transition leads */
     uint8_t to_state;
-};
-typedef struct temp_transition t_transition;
+} t_transition;
 
 /**
- * @brief Struct to represent a temporary NFA during construction. It contains the start
- * state and the end state. This struct is used as an intermediate representation while
- * building the NFA from the regex.
+ * @brief Struct to represent a temporary NFA during construction. It contains the start state and the end state. This struct is used as an intermediate representation while building the NFA from the regex.
  */
-struct temp_nfa
-{
+typedef struct temp_nfa {
     /* Start state of the temporary NFA */
     uint8_t start;
     /* End state of the temporary NFA */
     uint8_t end;
-};
-typedef struct temp_nfa t_nfa;
+} t_nfa;
 
 /**
- * @brief Struct to manage states and transitions during NFA construction. It keeps track
- * of the next available state ID, the list of states, the list of transitions, and the
- * alphabet used by the NFAs being constructed.
+ * @brief Struct to manage states and transitions during NFA construction. It keeps track of the next available state ID, the list of states, the list of transitions, and the alphabet used by the NFAs being constructed.
  */
-struct states_manager
-{
+typedef struct states_manager{
     /* Next available state ID */
     uint8_t next_id;
 
@@ -50,8 +39,7 @@ struct states_manager
 
     /* Alphabet used by the states manager */
     alphabet manager_alphabet;
-};
-typedef struct states_manager states_manager;
+} states_manager;
 
 // Function prototypes for internal helper functions
 
