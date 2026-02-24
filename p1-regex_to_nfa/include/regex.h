@@ -11,11 +11,13 @@
  * This enum centralizes the character constants for grouping and operators, so token classification and precedence logic can rely on named symbols instead of hard-coded literals.
  */
 typedef enum regex_symbols{
-    REGEX_LPAREN    = '(',
-    REGEX_RPAREN    = ')',
-    REGEX_OP_STAR   = '*',
+    REGEX_OP_OR     = '|',
     REGEX_OP_CONCAT = '.',
-    REGEX_OP_OR     = '|'
+    REGEX_OP_OPTIONAL = '?',
+    REGEX_OP_POSITIVE_CLOSURE = '+',
+    REGEX_OP_KLEENE_STAR   = '*',
+    REGEX_LPAREN    = '(',
+    REGEX_RPAREN    = ')'
 } regex_symbols;
 
 /**
