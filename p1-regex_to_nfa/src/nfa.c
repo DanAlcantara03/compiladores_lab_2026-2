@@ -61,6 +61,21 @@ static bool manager_is_valid(const states_manager *manager) {
 }
 
 /**
+ * @brief Validate that a temporary fragment references existing manager states.
+ *
+ * @param manager States manager that owns the temporary fragment states.
+ * @param fragment Temporary NFA fragment to validate.
+ * @return true when manager metadata is valid and both fragment endpoints are in range.
+ */
+static bool manager_accepts_fragment(const states_manager *manager, t_nfa fragment) {
+    if (!manager_is_valid(manager)) return false;
+    if (manager->states_count == 0) return false;
+    if (fragment.start >= manager->states_count) return false;
+    if (fragment.end >= manager->states_count) return false;
+    return true;
+}
+
+/**
  * @brief Build a canonical empty NFA value.
  *
  * The returned object owns no heap memory and can be safely passed to `nfa_free` multiple times.
