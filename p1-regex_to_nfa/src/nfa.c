@@ -439,24 +439,72 @@ nfa regex_to_nfa(const regex r) {
 }
 
 /**
- * @brief Function to convert a temporary NFA representation (t_nfa) into the final NFA struct. This function
- * takes the start and end states from the temporary NFA, initializes the transition table based on the
- * transitions stored in the states manager, and calculates the epsilon closures for all states.
+ * @brief Function to convert a temporary NFA representation (t_nfa) into the final NFA struct. This function takes the start and end states from the temporary NFA, initializes the transition table based on the transitions stored in the states manager, and calculates the epsilon closures for all states.
+ *
+ * Implementation overview:
+ * - Validates manager counters and temporary boundary states before allocating memory.
+ * - Builds a dense transition matrix of shape `states x alphabet_size`, where each cell is a 64-bit bitset of destination states.
+ * - Replays every temporary transition from `manager.transitions` into the matrix using `char_to_col` to map symbols to transition columns.
+ * - Computes epsilon-closure cache once at the end so matching can reuse it.
+ *
+ * Memory behavior:
+ * - Allocates the outer array of row pointers first.
+ * - Allocates each row independently.
+ * - On partial allocation failure, frees already allocated rows via `nfa_free` and returns `nfa_init()`.
+ *
  * @param temp_nfa The temporary NFA representation containing the start and end states
  * @param manager The states_manager struct that contains the transitions and alphabet information
  * @return An NFA struct representing the final non-deterministic finite automaton
  */
-nfa t_nfa_to_nfa(t_nfa temp_nfa, states_manager manager)
-{
-    (void)temp_nfa;
-    (void)manager;
-    // TODO: Convert temporary builder representation into final NFA struct.
-    // Suggested algorithm:
-    // 1) Initialize metadata (start, accept mask, state count, alphabet).
-    // 2) Allocate transition matrix and zero-initialize.
-    // 3) Populate transitions from manager records.
-    // 4) Precompute epsilon closures.
-    nfa result = {0};
+nfa t_nfa_to_nfa(t_nfa temp_nfa, states_manager manager) {
+    /* Default return value for any validation/allocation failure path. */
+    nfa result = nfa_init();
+
+    /* Validate manager metadata and start/end ids from temporary fragment. */
+    if (!manager_accepts_fragment(&manager, temp_nfa)) return result;
+
+    /* Transfer high-level automaton metadata. */
+    result.start_state = temp_nfa.start;
+    result.accept_states = (1ULL << temp_nfa.end);
+    result.states = manager.states_count;
+    result.nfa_alphabet = manager.manager_alphabet;
+
+    /* Allocate rows: one pointer per state. */
+    result.transitions = (uint64_t **)calloc(result.states, sizeof(uint64_t *));
+    if (result.transitions == NULL) return nfa_init();
+
+    /* Allocate columns per row: one bitset cell per alphabet symbol. */
+    bool ok = true;
+    for (uint8_t s = 0; s < result.states && ok; s++) {
+        result.transitions[s] = (uint64_t *)calloc((size_t)result.nfa_alphabet.symbol_count, sizeof(uint64_t));
+        if (result.transitions[s] == NULL) {
+            ok = false;
+            break;
+        }
+    }
+
+    /* Roll back partially built matrix if any row allocation failed. */
+    if (!ok) {
+        nfa_free(&result);
+        return result;
+    }
+
+    /* Replay temporary transitions into the final matrix representation. */
+    for (uint8_t i = 0; i < manager.transitions_count; i++) {
+        t_transition t = manager.transitions[i];
+        /* Defensive bounds checks in case manager data contains stale edges. */
+        if (t.from_state >= result.states || t.to_state >= result.states) continue;
+
+        int col = result.nfa_alphabet.char_to_col[(unsigned char)t.symbol];
+        /* Ignore symbols that are not mapped in the final alphabet. */
+        if (col < 0 || col >= result.nfa_alphabet.symbol_count) continue;
+
+        /* Set bit `to_state` in the destination set for (from_state, symbol). */
+        result.transitions[t.from_state][col] |= (1ULL << t.to_state);
+    }
+
+    /* Precompute epsilon closures so match_nfa can use cached values directly. */
+    calculate_epsilon_closure(&result);
     return result;
 }
 
