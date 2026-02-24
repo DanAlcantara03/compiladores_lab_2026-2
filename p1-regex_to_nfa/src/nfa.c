@@ -510,18 +510,36 @@ nfa t_nfa_to_nfa(t_nfa temp_nfa, states_manager manager) {
 
 /**
  * @brief Function to calculate the epsilon closure for all states in the given NFA.
- * This function initializes a cache to store the epsilon closures and computes the closure
- * for each state using a depth-first search approach.
+ * - This function initializes a cache to store the epsilon closures and computes the closure for each state using a depth-first search approach.
+ * 
+ * Implementation details:
+ * - Reallocates the epsilon-closure cache every call to avoid stale values.
+ * - Stores one 64-bit bitset per state in `epsilon_closure_cache`.
+ * - Iterates all states and delegates each closure computation to
+ *   `epsilon_closure`, which performs the graph traversal on epsilon edges.
+ *
+ * If allocation fails, the function returns early and leaves the cache as NULL.
+ *
  * @param automaton Pointer to the NFA for which epsilon closures are to be calculated
  */
-void calculate_epsilon_closure(nfa *automaton)
-{
-    (void)automaton;
-    // TODO: Allocate and fill epsilon-closure cache for every state.
-    // Suggested algorithm:
-    // 1) Allocate cache array size automaton->states.
-    // 2) Mark entries as "not computed".
-    // 3) Invoke epsilon_closure() for each state.
+void calculate_epsilon_closure(nfa *automaton) {
+    /* Validate required structure before touching cache or transitions. */
+    if (automaton == NULL) return;
+    if (automaton->states == 0) return;
+    if (automaton->transitions == NULL) return;
+
+    /* Rebuild cache from scratch to keep it consistent with current transitions. */
+    free(automaton->epsilon_closure_cache);
+    /* One 64-bit bitset per state: cache[state] = epsilon-closure(state). */
+    automaton->epsilon_closure_cache = (uint64_t *)calloc(automaton->states, sizeof(uint64_t));
+    if (automaton->epsilon_closure_cache == NULL) return;
+
+    /* Fill cache entry-by-entry by delegating each computation to epsilon_closure. */
+    for (uint8_t state = 0; state < automaton->states; state++) {
+        epsilon_closure(automaton, state);
+    }
+}
+
 }
 
 /**
