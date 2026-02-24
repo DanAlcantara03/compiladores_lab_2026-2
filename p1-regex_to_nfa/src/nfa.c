@@ -61,6 +61,46 @@ static bool manager_is_valid(const states_manager *manager) {
 }
 
 /**
+ * @brief Build a canonical empty NFA value.
+ *
+ * The returned object owns no heap memory and can be safely passed to
+ * `nfa_free` multiple times.
+ *
+ * @return Empty initialized NFA.
+ */
+nfa nfa_init(void) {
+    nfa automaton = {0};
+    automaton.start_state = INVALID_NFA_STATE;
+    automaton.nfa_alphabet = new_alphabet();
+    return automaton;
+}
+
+/**
+ * @brief Release all heap memory owned by an NFA and reset it.
+ *
+ * This function is idempotent: calling it multiple times on the same NFA is
+ * safe because it nulls pointers and restores canonical empty metadata.
+ *
+ * @param automaton Pointer to the NFA instance to release.
+ */
+void nfa_free(nfa *automaton) {
+    if (automaton == NULL) return;
+
+    if (automaton->transitions != NULL) {
+        /* Free each state row when the state counter is within module bounds. */
+        if (automaton->states <= MAX_STATES) {
+            for (uint8_t s = 0; s < automaton->states; s++) {
+                free(automaton->transitions[s]);
+            }
+        }
+        free(automaton->transitions);
+    }
+
+    free(automaton->epsilon_closure_cache);
+    *automaton = nfa_init();
+}
+
+/**
  * @brief Function to create a new alphabet. This function initializes an alphabet struct with default values, including setting the epsilon symbol and initializing the character-to-column mapping.
  */
 alphabet new_alphabet() {
