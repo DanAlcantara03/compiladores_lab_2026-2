@@ -179,6 +179,8 @@ static void test_from_implicit_to_explicit_concat (void){
     assert_regex_case(from_implicit_to_explicit_concat,"(ab)c","(a.b).c", "from_implicit_to_explicit_concat complex 2");
     assert_regex_case(from_implicit_to_explicit_concat,"a*bc","a*.b.c", "from_implicit_to_explicit_concat complex 3");
     assert_regex_case(from_implicit_to_explicit_concat, "a(b)c","a.(b).c", "from_implicit_to_explicit_concat complex 4");
+    assert_regex_case(from_implicit_to_explicit_concat, "a+b", "a+.b", "from_implicit_to_explicit_concat plus");
+    assert_regex_case(from_implicit_to_explicit_concat, "a?b", "a?.b", "from_implicit_to_explicit_concat optional");
 }
 
 
@@ -193,6 +195,8 @@ static void test_regex_explicit_infix_to_postfix(void) {
     assert_regex_case(regex_explicit_infix_to_postfix, "a.(b|c).d*.e", "abc|.d*.e.", "regex_explicit_infix_to_postfix complex_2");
     assert_regex_case(regex_explicit_infix_to_postfix, "(a|b).(c|d)*.e", "ab|cd|*.e.", "regex_explicit_infix_to_postfix complex_3");
     assert_regex_case(regex_explicit_infix_to_postfix, "a*.b.(c|d).e|f", "a*b.cd|.e.f|", "regex_explicit_infix_to_postfix complex_4");
+    assert_regex_case(regex_explicit_infix_to_postfix, "a+.b", "a+b.", "regex_explicit_infix_to_postfix plus");
+    assert_regex_case(regex_explicit_infix_to_postfix, "a?.b", "a?b.", "regex_explicit_infix_to_postfix optional");
 }
 
 /* parse_regex should cover implicit-concat + postfix conversion end-to-end. */
@@ -206,6 +210,8 @@ static void test_parse_regex_end_to_end(void) {
     assert_regex_case(parse_regex, "a(b|(ab(b|c)))*f", "abab.bc|.|*.f.", "parse_regex end-to-end complex_2)");
     assert_regex_case(parse_regex, "(a|b)(c|d)*e", "ab|cd|*.e.", "parse_regex end-to-end complex_1");
     assert_regex_case(parse_regex, "a*b(c|d)e|f", "a*b.cd|.e.f|", "parse_regex end-to-end complex_4");
+    assert_regex_case(parse_regex, "a+b", "a+b.", "parse_regex end-to-end plus");
+    assert_regex_case(parse_regex, "a?b", "a?b.", "parse_regex end-to-end optional");
 }
 
 /* parse_regex should safely reject malformed input cases. */
