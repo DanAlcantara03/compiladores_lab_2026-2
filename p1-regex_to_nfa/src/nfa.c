@@ -181,6 +181,7 @@ t_nfa concat_nfa(states_manager *manager, t_nfa *a, t_nfa *b) {
 t_nfa symbol_nfa(states_manager *manager, char symbol) {
     t_nfa result = {0};
     if (!manager_is_valid(manager)) return result;
+    add_symbol(&manager->manager_alphabet, symbol);
     result.start = new_state(manager);
     result.end = new_state(manager);
     add_transition(manager, result.start, symbol, result.end);
