@@ -1,8 +1,10 @@
 #include "regex.h"
 
+#include <stdlib.h>
 #include <stddef.h>   // size_t
 #include <stdio.h>    // FILE 
 #include <stdbool.h> // bool
+#include <string.h>
 #include "data_structures.h" // Stack and Queue
 
 
@@ -15,11 +17,13 @@
  */
 static bool is_literal(char c){
     switch (c) {
+    case REGEX_OP_OR:
+    case REGEX_OP_CONCAT:
+    case REGEX_OP_OPTIONAL:
+    case REGEX_OP_POSITIVE_CLOSURE:
+    case REGEX_OP_KLEENE_STAR:
     case REGEX_LPAREN:
     case REGEX_RPAREN:
-    case REGEX_OP_STAR:
-    case REGEX_OP_CONCAT:
-    case REGEX_OP_OR:
         return false;
     default:
         return true;
@@ -41,7 +45,7 @@ static bool starts_atom(char symbol){
  * @return true if @p symbol can end an atom; false otherwise.
  */
 static bool ends_atom(char symbol){
-    return symbol == REGEX_RPAREN || symbol == REGEX_OP_STAR || is_literal(symbol);
+    return symbol == REGEX_RPAREN || symbol == REGEX_OP_KLEENE_STAR || symbol == REGEX_OP_POSITIVE_CLOSURE || symbol == REGEX_OP_OPTIONAL || is_literal(symbol);
 }
 
 /**
@@ -50,7 +54,7 @@ static bool ends_atom(char symbol){
  * @return true if @p symbol is `*`, `.`, or `|`; false otherwise.
  */
 static bool is_operator(char symbol){
-    return symbol == REGEX_OP_STAR || symbol == REGEX_OP_CONCAT || symbol == REGEX_OP_OR;
+    return symbol == REGEX_OP_KLEENE_STAR || symbol == REGEX_OP_POSITIVE_CLOSURE || symbol == REGEX_OP_OPTIONAL || symbol == REGEX_OP_CONCAT || symbol == REGEX_OP_OR;
 }
 
 /**
@@ -64,7 +68,9 @@ static bool is_operator(char symbol){
  */
 static int precedence(regex_symbols op) {
     switch (op) {
-        case REGEX_OP_STAR:   return 3;
+        case REGEX_OP_KLEENE_STAR:   return 5;
+        case REGEX_OP_POSITIVE_CLOSURE: return 4;
+        case REGEX_OP_OPTIONAL: return 3;
         case REGEX_OP_CONCAT: return 2;
         case REGEX_OP_OR:     return 1;
         default:              return 0;
