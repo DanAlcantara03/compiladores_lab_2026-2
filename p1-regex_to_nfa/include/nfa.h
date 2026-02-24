@@ -12,7 +12,10 @@
 
 #define MAX_STATES 64
 #define MAX_SYMBOLS 256
-#define EPSILON_SYMBOL '\x01'
+
+/** Epsilon symbol. Represents the empty string. Using 240 because it's not a common
+ * character in regex and is outside the standard ASCII range */
+#define EPSILON_SYMBOL 240
 #define INVALID_NFA_STATE UINT8_MAX
 
 
