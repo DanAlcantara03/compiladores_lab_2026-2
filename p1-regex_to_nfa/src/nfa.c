@@ -233,8 +233,7 @@ t_nfa positive_closure_nfa(states_manager *manager, t_nfa *a) {
  * @param a Pointer to the input NFA
  * @return A new NFA struct representing the Kleene closure of the input NFA
  */
-t_nfa kleene_closure_nfa(states_manager *manager, t_nfa *a)
-{
+t_nfa kleene_closure_nfa(states_manager *manager, t_nfa *a) {
     t_nfa result = {0};
     if (!manager_is_valid(manager)) return result; 
     result = positive_closure_nfa(manager, a);
@@ -248,26 +247,141 @@ t_nfa kleene_closure_nfa(states_manager *manager, t_nfa *a)
  * @param a Pointer to the input NFA
  * @return A new NFA struct representing the optionality of the input NFA
  */
-t_nfa optional_nfa(states_manager *manager, t_nfa *a)
-{
+t_nfa optional_nfa(states_manager *manager, t_nfa *a) {
     t_nfa result = *a;
     if (!manager_is_valid(manager)) return result;
     add_transition(manager, result.start, EPSILON_SYMBOL, result.end);
     return result;
 }
 
+/**
+ * @brief Build an NFA from a regex encoded as postfix tokens.
+ *
+ * This implementation applies Thompson construction with a stack of temporary fragments (`t_nfa`, storing only start/end states). Literals push base fragments; operators pop one or two fragments and push the combined result.
+ *
+ * The function expects @p r to contain valid postfix tokens (for example, the output of `regex_parse`). If any stack operation fails, a helper builder returns invalid states, or the postfix expression is malformed, construction stops and an empty `nfa` (`{0}`) is returned.
+ *
+ * @param r Regular expression in postfix representation.
+ * @return A constructed NFA on success, or `{0}` on failure.
+ */
+nfa regex_to_nfa(const regex r) {
 
-nfa regex_to_nfa(const regex r)
-{
-    (void)r;
-    // TODO: Convert postfix regex into NFA via Thompson construction.
-    // Suggested algorithm:
-    // 1) Iterate tokens using a stack of temporary fragments.
-    // 2) Push symbol fragment for operands.
-    // 3) Pop/apply operators (concat, alternation, unary closures).
-    // 4) Validate stack ends with exactly one fragment.
-    // 5) Materialize transition table and epsilon-closure cache.
-    nfa result = {0};
+    nfa result = (nfa){0};
+
+    /* Reject empty/null regex input early. */
+    if (r.size == 0 || r.items == NULL) {
+        return result;
+    }
+
+    states_manager manager = new_states_manager();
+
+    /* Stack of partial Thompson fragments built from processed tokens. */
+    ds_stack fragments = {0};
+    if (ds_stack_init(&fragments, sizeof(t_nfa)) != DS_OK) {
+        return result;
+    }
+    /* Worst case: every token pushes one fragment. */
+    if (ds_stack_reserve(&fragments, r.size) != DS_OK) {
+        ds_stack_free(&fragments);
+        return result;
+    }
+
+    bool ok = true;
+
+    /* Consume postfix tokens left-to-right and reduce to one fragment. */
+    for (size_t i = 0; i < r.size && ok; i++) {
+        char token = r.items[i];
+
+        switch (token) {
+            case REGEX_OP_CONCAT: {
+                t_nfa right = {0};
+                t_nfa left = {0};
+                if (ds_stack_pop(&fragments, &right) != DS_OK) { ok = false; break; }
+                if (ds_stack_pop(&fragments, &left) != DS_OK) { ok = false; break; }
+
+                t_nfa combined = concat_nfa(&manager, &left, &right);
+                if (ds_stack_push(&fragments, &combined) != DS_OK) ok = false;
+                break;
+            }
+
+            case REGEX_OP_OR: {
+                t_nfa right = {0};
+                t_nfa left = {0};
+                if (ds_stack_pop(&fragments, &right) != DS_OK) { ok = false; break; }
+                if (ds_stack_pop(&fragments, &left) != DS_OK) { ok = false; break; }
+
+                t_nfa combined = union_nfa(&manager, &left, &right);
+                if (combined.start == INVALID_NFA_STATE || combined.end == INVALID_NFA_STATE) {
+                    ok = false;
+                    break;
+                }
+                if (ds_stack_push(&fragments, &combined) != DS_OK) ok = false;
+                break;
+            }
+
+            case REGEX_OP_KLEENE_STAR: {
+                t_nfa a = {0};
+                if (ds_stack_pop(&fragments, &a) != DS_OK) { ok = false; break; }
+
+                t_nfa closed = kleene_closure_nfa(&manager, &a);
+                if (closed.start == INVALID_NFA_STATE || closed.end == INVALID_NFA_STATE) {
+                    ok = false;
+                    break;
+                }
+                if (ds_stack_push(&fragments, &closed) != DS_OK) ok = false;
+                break;
+            }
+
+            case REGEX_OP_POSITIVE_CLOSURE: {
+                t_nfa a = {0};
+                if (ds_stack_pop(&fragments, &a) != DS_OK) { ok = false; break; }
+
+                t_nfa closed = positive_closure_nfa(&manager, &a);
+                if (closed.start == INVALID_NFA_STATE || closed.end == INVALID_NFA_STATE) {
+                    ok = false;
+                    break;
+                }
+                if (ds_stack_push(&fragments, &closed) != DS_OK) ok = false;
+                break;
+            }
+
+            case REGEX_OP_OPTIONAL: {
+                t_nfa a = {0};
+                if (ds_stack_pop(&fragments, &a) != DS_OK) { ok = false; break; }
+
+                t_nfa opt = optional_nfa(&manager, &a);
+                if (ds_stack_push(&fragments, &opt) != DS_OK) ok = false;
+                break;
+            }
+
+            default: {
+                /* Operands become base fragments with one labeled transition. */
+                t_nfa symbol = symbol_nfa(&manager, token);
+                if (symbol.start == INVALID_NFA_STATE || symbol.end == INVALID_NFA_STATE) {
+                    ok = false;
+                    break;
+                }
+                if (ds_stack_push(&fragments, &symbol) != DS_OK) ok = false;
+                break;
+            }
+        }
+    }
+
+    /* A valid postfix regex must collapse to exactly one root fragment. */
+    if (!ok || ds_stack_size(&fragments) != 1) {
+        ds_stack_free(&fragments);
+        return (nfa){0};
+    }
+
+    t_nfa root = {0};
+    if (ds_stack_pop(&fragments, &root) != DS_OK) {
+        ds_stack_free(&fragments);
+        return (nfa){0};
+    }
+
+    ds_stack_free(&fragments);
+    /* Materialize final transition table and epsilon-closure cache. */
+    result = t_nfa_to_nfa(root, manager);
     return result;
 }
 
