@@ -63,8 +63,7 @@ static bool manager_is_valid(const states_manager *manager) {
 /**
  * @brief Build a canonical empty NFA value.
  *
- * The returned object owns no heap memory and can be safely passed to
- * `nfa_free` multiple times.
+ * The returned object owns no heap memory and can be safely passed to `nfa_free` multiple times.
  *
  * @return Empty initialized NFA.
  */
@@ -78,8 +77,7 @@ nfa nfa_init(void) {
 /**
  * @brief Release all heap memory owned by an NFA and reset it.
  *
- * This function is idempotent: calling it multiple times on the same NFA is
- * safe because it nulls pointers and restores canonical empty metadata.
+ * This function is idempotent: calling it multiple times on the same NFA is safe because it nulls pointers and restores canonical empty metadata.
  *
  * @param automaton Pointer to the NFA instance to release.
  */
@@ -299,14 +297,14 @@ t_nfa optional_nfa(states_manager *manager, t_nfa *a) {
  *
  * This implementation applies Thompson construction with a stack of temporary fragments (`t_nfa`, storing only start/end states). Literals push base fragments; operators pop one or two fragments and push the combined result.
  *
- * The function expects @p r to contain valid postfix tokens (for example, the output of `regex_parse`). If any stack operation fails, a helper builder returns invalid states, or the postfix expression is malformed, construction stops and an empty `nfa` (`{0}`) is returned.
+ * The function expects @p r to contain valid postfix tokens (for example, the output of `regex_parse`). If any stack operation fails, a helper builder returns invalid states, or the postfix expression is malformed, construction stops and returns `nfa_init()`.
  *
  * @param r Regular expression in postfix representation.
- * @return A constructed NFA on success, or `{0}` on failure.
+ * @return A constructed NFA on success, or `nfa_init()` on failure.
  */
 nfa regex_to_nfa(const regex r) {
 
-    nfa result = (nfa){0};
+    nfa result = nfa_init();
 
     /* Reject empty/null regex input early. */
     if (r.size == 0 || r.items == NULL) {
@@ -410,13 +408,13 @@ nfa regex_to_nfa(const regex r) {
     /* A valid postfix regex must collapse to exactly one root fragment. */
     if (!ok || ds_stack_size(&fragments) != 1) {
         ds_stack_free(&fragments);
-        return (nfa){0};
+        return nfa_init();
     }
 
     t_nfa root = {0};
     if (ds_stack_pop(&fragments, &root) != DS_OK) {
         ds_stack_free(&fragments);
-        return (nfa){0};
+        return nfa_init();
     }
 
     ds_stack_free(&fragments);
