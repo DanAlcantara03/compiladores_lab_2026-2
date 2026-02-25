@@ -130,6 +130,26 @@ static void test_regex_to_nfa_rejects_invalid_postfix(void) {
 
 /* Core matching behavior for literal, concatenation and alternation. */
 static void test_match_nfa_basic_language_cases(void) {
+    nfa literal = build_nfa_from_infix("a");
+    assert_match(literal, "a", true, "literal accepts exact symbol");
+    assert_match(literal, "", false, "literal rejects empty");
+    assert_match(literal, "aa", false, "literal rejects repeated");
+    assert_match(literal, "b", false, "literal rejects other symbol");
+    nfa_free(&literal);
+
+    nfa concat = build_nfa_from_infix("ab");
+    assert_match(concat, "ab", true, "concat accepts sequence");
+    assert_match(concat, "a", false, "concat rejects prefix");
+    assert_match(concat, "b", false, "concat rejects suffix only");
+    assert_match(concat, "aba", false, "concat rejects superstring");
+    nfa_free(&concat);
+
+    nfa alternation = build_nfa_from_infix("a|b");
+    assert_match(alternation, "a", true, "or accepts left branch");
+    assert_match(alternation, "b", true, "or accepts right branch");
+    assert_match(alternation, "", false, "or rejects empty");
+    assert_match(alternation, "ab", false, "or rejects concatenated pair");
+    nfa_free(&alternation);
 }
 
 /* Closure operators should support empty/non-empty language variants correctly. */
