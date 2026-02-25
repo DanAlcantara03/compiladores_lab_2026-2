@@ -70,6 +70,22 @@ static void assert_match(nfa automaton, const char *input, bool expected, const 
 
 /* Verifies stream output bytes exactly match expected text. */
 static void assert_stream_equals(FILE *stream, const char *expected, const char *context) {
+    assert(stream != NULL);
+    assert(expected != NULL);
+
+    rewind(stream);
+    for (size_t i = 0; expected[i] != '\0'; i++) {
+        int got = fgetc(stream);
+        if (got == EOF || got != (unsigned char)expected[i]) {
+            fprintf(stderr, "FAIL: %s (byte mismatch at index %zu)\n", context, i);
+            assert(got != EOF && got == (unsigned char)expected[i]);
+        }
+    }
+
+    if (fgetc(stream) != EOF) {
+        fprintf(stderr, "FAIL: %s (unexpected extra output)\n", context);
+        assert(0);
+    }
 }
 
 /* nfa_init should produce a canonical empty NFA and nfa_free should be idempotent. */
