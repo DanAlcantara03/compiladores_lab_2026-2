@@ -104,6 +104,28 @@ static void test_nfa_init_and_free_idempotent(void) {
 
 /* regex_to_nfa should reject malformed/invalid postfix descriptors safely. */
 static void test_regex_to_nfa_rejects_invalid_postfix(void) {
+    regex empty = create_regex("");
+    nfa automaton = regex_to_nfa(empty);
+    assert_nfa_is_empty(automaton, "regex_to_nfa empty postfix");
+    nfa_free(&automaton);
+    regex_free(&empty);
+
+    regex invalid_descriptor = (regex){ .items = NULL, .size = 2 };
+    automaton = regex_to_nfa(invalid_descriptor);
+    assert_nfa_is_empty(automaton, "regex_to_nfa inconsistent descriptor");
+    nfa_free(&automaton);
+
+    regex malformed = create_regex("ab");
+    automaton = regex_to_nfa(malformed);
+    assert_nfa_is_empty(automaton, "regex_to_nfa stack leftover");
+    nfa_free(&automaton);
+    regex_free(&malformed);
+
+    regex underflow = create_regex("|");
+    automaton = regex_to_nfa(underflow);
+    assert_nfa_is_empty(automaton, "regex_to_nfa operator underflow");
+    nfa_free(&automaton);
+    regex_free(&underflow);
 }
 
 /* Core matching behavior for literal, concatenation and alternation. */
