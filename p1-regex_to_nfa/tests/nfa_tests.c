@@ -18,10 +18,23 @@ static void run_test(test_fn fn, const char *name, int *passed, int *total) {
 
 /* Builds an NFA from infix regex text using the parser pipeline. */
 static nfa build_nfa_from_infix(const char *infix) {
+    regex infix_r = create_regex(infix);
+    regex postfix = parse_regex(&infix_r);
+    nfa automaton = regex_to_nfa(postfix);
+    regex_free(&postfix);
+    regex_free(&infix_r);
+    return automaton;
 }
 
 /* Returns a heap string with `count` repeated copies of `ch`. */
 static char *repeat_char(char ch, size_t count) {
+    char *text = (char *)malloc(count + 1);
+    assert(text != NULL);
+    for (size_t i = 0; i < count; i++) {
+        text[i] = ch;
+    }
+    text[count] = '\0';
+    return text;
 }
 
 /* Asserts that an NFA value is the canonical empty/invalid representation. */
