@@ -90,6 +90,16 @@ static void assert_stream_equals(FILE *stream, const char *expected, const char 
 
 /* nfa_init should produce a canonical empty NFA and nfa_free should be idempotent. */
 static void test_nfa_init_and_free_idempotent(void) {
+    nfa automaton = nfa_init();
+    assert_nfa_is_empty(automaton, "nfa_init canonical empty");
+    assert(automaton.nfa_alphabet.symbol_count == 1);
+    assert(automaton.nfa_alphabet.char_to_col[(unsigned char)EPSILON_SYMBOL] == 0);
+
+    nfa_free(&automaton);
+    assert_nfa_is_empty(automaton, "nfa_free after nfa_init");
+
+    nfa_free(&automaton);
+    assert_nfa_is_empty(automaton, "nfa_free idempotent");
 }
 
 /* regex_to_nfa should reject malformed/invalid postfix descriptors safely. */
