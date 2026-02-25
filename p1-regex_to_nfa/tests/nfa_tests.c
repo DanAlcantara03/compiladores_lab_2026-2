@@ -178,6 +178,14 @@ static void test_match_nfa_closure_and_optional(void) {
 
 /* Complex expressions should parse and simulate through branching + closure. */
 static void test_match_nfa_complex_expression(void) {
+    nfa automaton = build_nfa_from_infix("a(b|c)*d");
+    assert_match(automaton, "ad", true, "complex accepts zero middle reps");
+    assert_match(automaton, "abcd", true, "complex accepts mixed middle reps");
+    assert_match(automaton, "abcbcd", true, "complex accepts longer middle reps");
+    assert_match(automaton, "a", false, "complex rejects missing suffix");
+    assert_match(automaton, "abce", false, "complex rejects wrong suffix");
+    assert_match(automaton, "d", false, "complex rejects missing prefix");
+    nfa_free(&automaton);
 }
 
 /* Runtime guard paths should reject invalid input descriptors and unknown symbols. */
