@@ -60,6 +60,12 @@ static void assert_nfa_is_empty(nfa automaton, const char *context) {
 
 /* Asserts one match result for a C-string input. */
 static void assert_match(nfa automaton, const char *input, bool expected, const char *context) {
+    bool got = match_nfa(automaton, input, strlen(input));
+    if (got != expected) {
+        fprintf(stderr, "FAIL: %s (input=\"%s\" got=%d expected=%d)\n",
+                context, input, got, expected);
+        assert(got == expected);
+    }
 }
 
 /* Verifies stream output bytes exactly match expected text. */
