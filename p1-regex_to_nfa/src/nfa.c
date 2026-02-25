@@ -601,35 +601,129 @@ void epsilon_closure(nfa *automaton, uint8_t state) {
 }
 
 /**
- * @brief Function to compute the epsilon closure for a given state in the NFA.
- * This function uses a depth-first search approach to find all states reachable
- * from the given state via epsilon transitions.
- * @param automaton Pointer to the NFA
- * @param state The state for which the epsilon closure is to be computed
+ * @brief Simulate an NFA over an input string using bitset state sets.
+ *
+ * Implementation details:
+ * - `current` stores the active state set as a 64-bit bitmask.
+ * - Before consuming input, `current` is initialized with the epsilon-closure of the start state.
+ * - For each input symbol, the function performs two phases:
+ *   1) move: union transitions on the symbol from all active states
+ *   2) expand: union epsilon-closures of all moved-to states
+ *
+ * The function can work with an NFA that already has an epsilon-closure cache, or lazily compute a temporary one when missing. On any validation failure, unknown symbol, or dead configuration, it rejects early.
+ *
+ * @param automaton NFA to simulate.
+ * @param input Input buffer (may be NULL only when @p input_length is zero).
+ * @param input_length Number of symbols to consume.
+ * @return true when at least one active state is accepting after full
+ *         consumption; false otherwise.
  */
-void epsilon_closure(nfa *automaton, uint8_t state)
-{
-    (void)automaton;
-    (void)state;
-    // TODO: Compute epsilon closure for one state using DFS/BFS.
-    // Suggested algorithm:
-    // 1) Seed closure with the input state.
-    // 2) Traverse epsilon edges using stack/queue.
-    // 3) Add each discovered state exactly once.
-    // 4) Store resulting bitset into cache[state].
+bool match_nfa(nfa automaton, const char *input, size_t input_length) {
+    /* Basic structural validation before simulation. */
+    if (automaton.states == 0 || automaton.transitions == NULL) return false;
+    if (automaton.start_state >= automaton.states) return false;
+    if (input == NULL && input_length > 0) return false;
+
+    /* Build a cache on demand; free it only if this function allocated it. */
+    bool owns_local_cache = false;
+    if (automaton.epsilon_closure_cache == NULL) {
+        calculate_epsilon_closure(&automaton);
+        if (automaton.epsilon_closure_cache == NULL) return false;
+        owns_local_cache = true;
+    }
+
+    /* Start from epsilon-closure(start). */
+    uint64_t current = automaton.epsilon_closure_cache[automaton.start_state];
+    bool accepted = false;
+
+    for (size_t i = 0; i < input_length; i++) {
+        unsigned char symbol = (unsigned char)input[i];
+        int col = automaton.nfa_alphabet.char_to_col[symbol];
+        /* Reject symbols not present in the automaton alphabet. */
+        if (col < 0 || col >= automaton.nfa_alphabet.symbol_count) goto clear_automata;
+
+        /* Move on the current symbol from all active states. */
+        uint64_t moved = 0;
+        for (uint8_t s = 0; s < automaton.states; s++) {
+            if ((current & (1ULL << s)) == 0) continue;
+            moved |= automaton.transitions[s][col];
+        }
+
+        /* No reachable state after consuming this symbol -> reject. */
+        if (moved == 0) goto clear_automata;
+
+        /* Expand with epsilon-closures of the moved-to states. */
+        uint64_t expanded = 0;
+        for (uint8_t s = 0; s < automaton.states; s++) {
+            if ((moved & (1ULL << s)) == 0) continue;
+            expanded |= automaton.epsilon_closure_cache[s];
+        }
+
+        current = expanded;
+        /* Defensive rejection for an empty active set. */
+        if (current == 0) goto clear_automata;
+    }
+
+    /* Accept if any active state is in the accept set. */
+    accepted = (current & automaton.accept_states) != 0;
+clear_automata:
+    if (owns_local_cache) free(automaton.epsilon_closure_cache);
+    return accepted;
 }
 
-bool match_nfa(nfa automaton, const char *input, size_t input_length)
-{
-    (void)automaton;
-    (void)input;
-    (void)input_length;
-    // TODO: Simulate NFA with epsilon closures.
-    // Suggested algorithm:
-    // 1) current = epsilon_closure(start_state).
-    // 2) For each symbol, compute move(current, symbol).
-    // 3) Expand via epsilon closures of reached states.
-    // 4) Early reject if current set becomes empty.
-    // 5) Accept if current intersects accept_states.
-    return false;
+/**
+ * @brief Print the NFA in a compact, debug-friendly format.
+ *
+ * @param automaton NFA instance to print.
+ * @param out Destination stream, or NULL to use stdout.
+ */
+void nfa_print(nfa automaton, FILE *out) {
+    FILE *dest = out ? out : stdout;
+    fprintf(dest, "NFA{states=%u,start=%u,accept=0x%016llx}\n",
+            automaton.states,
+            automaton.start_state,
+            (unsigned long long)automaton.accept_states);
+
+    fprintf(dest, "alphabet:");
+    for (int col = 0; col < automaton.nfa_alphabet.symbol_count; col++) {
+        unsigned char sym = (unsigned char)automaton.nfa_alphabet.symbols[col];
+        if (sym == (unsigned char)EPSILON_SYMBOL) {
+            fprintf(dest, " [eps]");
+        } else if (sym >= 32 && sym <= 126) {
+            fprintf(dest, " [%c]", (char)sym);
+        } else {
+            fprintf(dest, " [0x%02x]", sym);
+        }
+    }
+    fputc('\n', dest);
+
+    if (automaton.transitions == NULL || automaton.states == 0 || automaton.nfa_alphabet.symbol_count <= 0) {
+        return;
+    }
+
+    for (uint8_t from = 0; from < automaton.states; from++) {
+        for (int col = 0; col < automaton.nfa_alphabet.symbol_count; col++) {
+            uint64_t to_set = automaton.transitions[from][col];
+            if (to_set == 0) continue;
+
+            unsigned char sym = (unsigned char)automaton.nfa_alphabet.symbols[col];
+            if (sym == (unsigned char)EPSILON_SYMBOL) {
+                fprintf(dest, "q%u -eps-> ", from);
+            } else if (sym >= 32 && sym <= 126) {
+                fprintf(dest, "q%u -%c-> ", from, (char)sym);
+            } else {
+                fprintf(dest, "q%u -0x%02x-> ", from, sym);
+            }
+
+            fputc('{', dest);
+            bool first = true;
+            for (uint8_t to = 0; to < automaton.states; to++) {
+                if ((to_set & (1ULL << to)) == 0) continue;
+                if (!first) fputc(',', dest);
+                fprintf(dest, "q%u", to);
+                first = false;
+            }
+            fprintf(dest, "}\n");
+        }
+    }
 }
