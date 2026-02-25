@@ -42,3 +42,17 @@ target_include_directories(regex_tests PRIVATE
 )
 
 add_test(NAME regex_tests COMMAND regex_tests)
+
+# ---- NFA tests ----
+add_executable(nfa_tests
+    ./tests/nfa_tests.c
+    ./src/data_structures.c
+    ./src/regex.c
+    ./src/nfa.c
+)
+
+target_include_directories(nfa_tests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+add_test(NAME nfa_tests COMMAND nfa_tests)
