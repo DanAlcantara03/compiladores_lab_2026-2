@@ -39,6 +39,23 @@ static char *repeat_char(char ch, size_t count) {
 
 /* Asserts that an NFA value is the canonical empty/invalid representation. */
 static void assert_nfa_is_empty(nfa automaton, const char *context) {
+    if (automaton.start_state != INVALID_NFA_STATE) {
+        fprintf(stderr, "FAIL: %s (start_state=%u expected=%u)\n",
+                context, automaton.start_state, INVALID_NFA_STATE);
+        assert(automaton.start_state == INVALID_NFA_STATE);
+    }
+    if (automaton.states != 0) {
+        fprintf(stderr, "FAIL: %s (states=%u expected=0)\n", context, automaton.states);
+        assert(automaton.states == 0);
+    }
+    if (automaton.transitions != NULL) {
+        fprintf(stderr, "FAIL: %s (transitions must be NULL)\n", context);
+        assert(automaton.transitions == NULL);
+    }
+    if (automaton.epsilon_closure_cache != NULL) {
+        fprintf(stderr, "FAIL: %s (epsilon_closure_cache must be NULL)\n", context);
+        assert(automaton.epsilon_closure_cache == NULL);
+    }
 }
 
 /* Asserts one match result for a C-string input. */
