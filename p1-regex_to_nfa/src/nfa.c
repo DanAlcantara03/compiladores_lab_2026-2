@@ -540,6 +540,64 @@ void calculate_epsilon_closure(nfa *automaton) {
     }
 }
 
+/**
+ * @brief Compute and cache the epsilon-closure of one state.
+ *
+ * Implementation details:
+ * - The closure is represented as a 64-bit bitset (`closure`), where bit `i` means state `i` is epsilon-reachable.
+ * - Traversal uses a fixed-size FIFO queue (`queue`, `head`, `tail`), so this is a breadth-first exploration over epsilon edges.
+ * - `visited[]` prevents enqueuing the same state multiple times and avoids infinite loops on epsilon cycles.
+ * - Epsilon moves are read from one transition-table column identified by `EPSILON_SYMBOL`; each row entry is itself a bitset of destination states.
+ *
+ * If the epsilon symbol is not present in the alphabet mapping, the closure is just the state itself. The result is written to `automaton->epsilon_closure_cache[state]`.
+ *
+ * @param automaton Pointer to the NFA.
+ * @param state State for which the closure is computed.
+ */
+void epsilon_closure(nfa *automaton, uint8_t state) {
+    /* Validate prerequisites for reading transitions and writing cache. */
+    if (automaton == NULL) return;
+    if (automaton->transitions == NULL) return;
+    if (automaton->epsilon_closure_cache == NULL) return;
+    if (state >= automaton->states) return;
+
+    int epsilon_col = automaton->nfa_alphabet.char_to_col[(unsigned char)EPSILON_SYMBOL];
+    /* If epsilon is absent from alphabet, closure contains only the seed state. */
+    if (epsilon_col < 0 || epsilon_col >= automaton->nfa_alphabet.symbol_count) {
+        automaton->epsilon_closure_cache[state] = (1ULL << state);
+        return;
+    }
+
+    /* BFS workspace over finite state ids [0, automaton->states). */
+    bool visited[MAX_STATES] = { false };
+    uint8_t queue[MAX_STATES] = {0};
+    uint8_t head = 0;
+    uint8_t tail = 0;
+    uint64_t closure = 0;
+
+    /* Seed with the queried state (reflexive closure). */
+    visited[state] = true;
+    queue[tail++] = state;
+    /* We start with the state */
+    closure |= (1ULL << state);
+
+    /* Expand all states reachable through repeated epsilon transitions. */
+    while (head < tail) {
+        uint8_t current = queue[head++];
+        uint64_t epsilon_moves = automaton->transitions[current][epsilon_col];
+
+        for (uint8_t next = 0; next < automaton->states; next++) {
+            if ((epsilon_moves & (1ULL << next)) == 0) continue;
+            if (visited[next]) continue;
+
+            visited[next] = true;
+            closure |= (1ULL << next);
+            queue[tail++] = next;
+        }
+    }
+
+    /* Persist closure for later reuse by matcher/simulator code. */
+    automaton->epsilon_closure_cache[state] = closure;
 }
 
 /**
