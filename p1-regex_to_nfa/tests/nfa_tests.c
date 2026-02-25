@@ -154,6 +154,26 @@ static void test_match_nfa_basic_language_cases(void) {
 
 /* Closure operators should support empty/non-empty language variants correctly. */
 static void test_match_nfa_closure_and_optional(void) {
+    nfa kleene = build_nfa_from_infix("a*");
+    assert_match(kleene, "", true, "kleene accepts empty");
+    assert_match(kleene, "a", true, "kleene accepts one");
+    assert_match(kleene, "aaaa", true, "kleene accepts many");
+    assert_match(kleene, "b", false, "kleene rejects foreign symbol");
+    nfa_free(&kleene);
+
+    nfa positive = build_nfa_from_infix("a+");
+    assert_match(positive, "", false, "positive rejects empty");
+    assert_match(positive, "a", true, "positive accepts one");
+    assert_match(positive, "aaaa", true, "positive accepts many");
+    assert_match(positive, "b", false, "positive rejects foreign symbol");
+    nfa_free(&positive);
+
+    nfa optional = build_nfa_from_infix("a?");
+    assert_match(optional, "", true, "optional accepts empty");
+    assert_match(optional, "a", true, "optional accepts one");
+    assert_match(optional, "aa", false, "optional rejects two");
+    assert_match(optional, "b", false, "optional rejects foreign symbol");
+    nfa_free(&optional);
 }
 
 /* Complex expressions should parse and simulate through branching + closure. */
