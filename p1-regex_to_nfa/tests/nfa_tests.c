@@ -225,6 +225,21 @@ static void test_match_nfa_builds_local_cache_when_missing(void) {
 
 /* Stress boundary at MAX_STATES: 32 literals should fit, 33 should fail. */
 static void test_regex_to_nfa_state_capacity_boundary(void) {
+    char *thirty_two = repeat_char('a', 32);
+    nfa ok = build_nfa_from_infix(thirty_two);
+    assert(ok.states == MAX_STATES);
+
+    assert(match_nfa(ok, thirty_two, 32) == true);
+    assert(match_nfa(ok, thirty_two, 31) == false);
+
+    nfa_free(&ok);
+    free(thirty_two);
+
+    char *thirty_three = repeat_char('a', 33);
+    nfa overflow = build_nfa_from_infix(thirty_three);
+    assert_nfa_is_empty(overflow, "regex_to_nfa must fail when states exceed MAX_STATES");
+    nfa_free(&overflow);
+    free(thirty_three);
 }
 
 /* nfa_print should write deterministic output for an explicit stream and stdout fallback. */
