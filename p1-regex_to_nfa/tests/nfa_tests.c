@@ -244,6 +244,51 @@ static void test_regex_to_nfa_state_capacity_boundary(void) {
 
 /* nfa_print should write deterministic output for an explicit stream and stdout fallback. */
 static void test_nfa_print_output(void) {
+    nfa automaton = build_nfa_from_infix("a");
+    const char *expected =
+        "NFA{states=2,start=0,accept=0x0000000000000002}\n"
+        "alphabet: [eps] [a]\n"
+        "q0 -a-> {q1}\n";
+
+    FILE *tmp = tmpfile();
+    assert(tmp != NULL);
+    nfa_print(automaton, tmp);
+    fflush(tmp);
+    assert_stream_equals(tmp, expected, "nfa_print explicit stream");
+    fclose(tmp);
+
+    int pipefd[2] = { -1, -1 };
+    assert(pipe(pipefd) == 0);
+
+    fflush(stdout);
+    int saved_stdout_fd = dup(STDOUT_FILENO);
+    assert(saved_stdout_fd >= 0);
+    assert(dup2(pipefd[1], STDOUT_FILENO) >= 0);
+    close(pipefd[1]);
+
+    nfa_print(automaton, NULL);
+    fflush(stdout);
+
+    assert(dup2(saved_stdout_fd, STDOUT_FILENO) >= 0);
+    close(saved_stdout_fd);
+
+    char captured[512] = {0};
+    size_t used = 0;
+    ssize_t nread = 0;
+    while ((nread = read(pipefd[0], captured + used, sizeof(captured) - 1 - used)) > 0) {
+        used += (size_t)nread;
+        if (used == sizeof(captured) - 1) {
+            fprintf(stderr, "FAIL: nfa_print stdout fallback (capture buffer too small)\n");
+            assert(0);
+        }
+    }
+    assert(nread >= 0);
+    close(pipefd[0]);
+
+    captured[used] = '\0';
+    assert(strcmp(captured, expected) == 0);
+
+    nfa_free(&automaton);
 }
 
 int main(void) {
