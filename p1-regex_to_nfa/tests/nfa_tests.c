@@ -190,6 +190,24 @@ static void test_match_nfa_complex_expression(void) {
 
 /* Runtime guard paths should reject invalid input descriptors and unknown symbols. */
 static void test_match_nfa_invalid_runtime_inputs(void) {
+    nfa automaton = build_nfa_from_infix("ab");
+
+    assert(match_nfa(automaton, NULL, 1) == false);
+    assert(match_nfa(automaton, "ac", 2) == false); /* 'c' is not in alphabet */
+
+    nfa bad_start = automaton;
+    bad_start.start_state = bad_start.states;
+    assert(match_nfa(bad_start, "ab", 2) == false);
+
+    nfa bad_states = automaton;
+    bad_states.states = 0;
+    assert(match_nfa(bad_states, "ab", 2) == false);
+
+    nfa bad_transitions = automaton;
+    bad_transitions.transitions = NULL;
+    assert(match_nfa(bad_transitions, "ab", 2) == false);
+
+    nfa_free(&automaton);
 }
 
 /* When cache is missing, match_nfa should allocate a temporary one and still succeed. */
