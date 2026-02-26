@@ -7,17 +7,20 @@
 
 void print_postfix(regex r)
 {
-    for (int i = 0; i < r.size; i++)
+    for (size_t i = 0; i < r.size; i++)
     {
-        printf("%c", r.items[i].value);
+        printf("%c", r.items[i]);
     }
     printf("\n");
 }
 
 void test_strings_stdin(const char *regex_str)
 {
-    regex r = parse_regex(regex_str);
+    regex infix = create_regex(regex_str);
+    regex r = parse_regex(&infix);
     nfa n = regex_to_nfa(r);
+    regex_free(&r);
+    regex_free(&infix);
 
     char buf[1024];
     while (fgets(buf, sizeof(buf), stdin))
@@ -27,6 +30,7 @@ void test_strings_stdin(const char *regex_str)
         printf("%d", result ? 1 : 0);
     }
     printf("\n");
+    nfa_free(&n);
 }
 
 int main(int argc, char *argv[])
@@ -42,7 +46,13 @@ int main(int argc, char *argv[])
                 if (!fgets(regex_str, sizeof(regex_str), stdin))
                     return 1;
                 regex_str[strcspn(regex_str, "\r\n")] = '\0';
-                print_postfix(parse_regex(regex_str));
+                {
+                    regex infix = create_regex(regex_str);
+                    regex postfix = parse_regex(&infix);
+                    print_postfix(postfix);
+                    regex_free(&postfix);
+                    regex_free(&infix);
+                }
                 return 0;
             case 't':
                 if (!fgets(regex_str, sizeof(regex_str), stdin))
