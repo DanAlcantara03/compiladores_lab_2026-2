@@ -212,6 +212,15 @@ static void test_match_nfa_invalid_runtime_inputs(void) {
 
 /* When cache is missing, match_nfa should allocate a temporary one and still succeed. */
 static void test_match_nfa_builds_local_cache_when_missing(void) {
+    nfa automaton = build_nfa_from_infix("ab");
+    free(automaton.epsilon_closure_cache);
+    automaton.epsilon_closure_cache = NULL;
+
+    assert(match_nfa(automaton, "ab", 2) == true);
+    assert(match_nfa(automaton, "a", 1) == false);
+    assert(automaton.epsilon_closure_cache == NULL); /* owned cache is local in match_nfa */
+
+    nfa_free(&automaton);
 }
 
 /* Stress boundary at MAX_STATES: 32 literals should fit, 33 should fail. */
