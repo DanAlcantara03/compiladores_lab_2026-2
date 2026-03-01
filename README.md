@@ -1,75 +1,104 @@
 # Compiladores Lab Project
 
 ## Overview
-This repository contains the base structure for a C development project used throughout the semester labs.
+This repository is organized into 12 C project folders: 11 practice folders (`p1` to `p11`) and 1 final project folder (`final_proyect`).
+Each practice is a standalone deliverable and, at the same time, a module-building step for the final project.
 
 ## Project Structure
 ```
 compiladores_lab_2026-2/
 ├─ README.md
-├─ Makefile
 ├─ .gitignore
-├─ include/            # Public headers (.h)
-│  ├─ example.h
-│  └─ utils_example.h
-├─ src/                # Source code (.c)
-│  ├─ main_example.c
-│  ├─ utils_example.c
-│  └─ modulo_x_example.c
-├─ tests/              # Tests for the source code
-│  ├─ test_x_example.c
-├─ build/              # Generated Fieles (objects, binaies) (don't be included in the github)
-│  ├─ obj/
-│  └─ bin/
-├─ lib/                # Outer or own libraries (opcional)
-└─ docs/               # Documentacion (opcional)
-   ├─ reports/         # Reports for each practice.
+├─ final_proyect/      # Final integrated project (C + Make)
+│  ├─ Makefile
+│  ├─ include/
+│  ├─ src/
+│  │  └─ main.c
+│  ├─ tests/
+│  ├─ build/
+│  │  ├─ obj/
+│  │  └─ bin/
+│  ├─ lib/
+│  └─ docs/
+├─ p1-regex_to_nfa/    # Practice 1 example (C + CMake)
+│  ├─ CMakeLists.txt
+│  ├─ Dockerfile
+│  ├─ include/
+│  ├─ src/
+│  │  ├─ main.c
+│  │  └─ others.c
+│  ├─ tests/
+│  ├─ docs/
+│  ├─ validator/
+│  └─ build/
+│     └─ .cmake/
+├─ p2-.../
+│  └─ ...
+├─ ...
+└─ p11-.../
+   └─ ...
 ```
 
 ## Build & Run
-Requirements: GCC (or Clang) + Make
+Requirements: Docker, GCC (or Clang), Make, and CMake (for projects that use CMake).
+
+Each practice is built and tested inside its own folder. The final project is also built in its own folder.
 
 ```bash
+cd p1-regex_to_nfa
+cmake -S . -B build
+cmake --build build
+```
+
+```bash
+cd final_proyect
 make
 make run
 ```
 
 ## Branch Strategy (Branching Model)
 
-We will follow a lightweight GitFlow approach:
+We follow a lightweight GitFlow approach:
 
 - `main`: stable, production-ready code. Only merged via Pull Requests.
-- `develop`: integration branch for ongoing work during the semester.
-- `feature/<short-description>`: new features developed from `develop`.
-- `bugfix/<short-description>`: non-urgent fixes developed from `develop`.
+- `develop`: semester integration branch.
+- `feature/<target>-<short-description>`: new features developed from `develop`.
+- `bugfix/<target>-<short-description>`: non-urgent fixes developed from `develop`.
 - `hotfix/<short-description>`: urgent fixes branched from `main` and merged back into both `main` and `develop`.
 
-## Course Methodology: Practices + Semester Project
+`<target>` should identify the folder scope, for example: `p03`, `p11`, or `final_proyect`.
 
-This repository supports two parallel tracks throughout the semester:
+## Course Methodology: Practices + Final Integration
 
-1) **11 Focused Practices**: short, incremental implementations that build individual compiler modules.
-2) **Semester Project**: an integrated, continuously evolving compiler (“Design your language”) assembled from the practices.
+This repository contains 12 project folders developed during the semester:
 
-### How Practices Feed the Project
-Each practice is treated as a building block that is merged into the main codebase, so the semester project grows week by week.
-By the end of the course, the integrated compiler should be functional and ready for a final practical evaluation.
+1) **11 Practice Projects**: `p1` to `p11`, each implemented and validated as a standalone practice.
+2) **1 Final Project**: `final_proyect`, where validated modules from practices are integrated into a complete compiler project.
 
-### Git Workflow per Practice
+### Relationship Between Practices and Final Project
+Each practice is designed as a small part of the final project.
+After a practice is validated, its module(s) are adapted and integrated into `final_proyect`.
+By the end of the semester, `final_proyect` should include the accumulated work from the 11 practices.
+
+### Git Workflow per Practice and Final Integration
 For each practice `pXX`:
 
 1. Create a short-lived branch from `develop`:
    - `feature/pXX-<topic>` for new work
    - `bugfix/pXX-<topic>` for fixes
 
-2. Commit small changes with clear messages.
+2. Implement and validate the work in the corresponding practice folder (`pXX-*`).
 
 3. Open a Pull Request into `develop` and merge only when:
-   - The project builds successfully
+   - The practice builds successfully
    - The practice output/behavior is correct
 
-4. Tag the merge commit to freeze the delivery state:
-   - `p01`, `p02`, ..., `p11`
+4. Integrate the validated module(s) into `final_proyect` in a dedicated branch:
+   - `feature/final-<integration-topic>`
+
+5. Tag merge commits to freeze delivery states:
+   - Practice checkpoints: `p01`, `p02`, ..., `p11`
+   - Final project milestones: `final-v1`, `final-v2`, ...
 
 Example:
 ```bash
@@ -77,7 +106,7 @@ git checkout develop
 git pull
 git checkout -b feature/p03-buffer-tokenizer
 
-# work...
+# Implement and test practice in p03-...
 
 git add .
 git commit -m "Implement buffered input and tokenizer"
@@ -90,20 +119,29 @@ git checkout develop
 git pull
 git tag -a p03 -m "Practice 03: buffer and tokenizer"
 git push origin p03
+
+git checkout -b feature/final-integrate-p03-tokenizer
+# Integrate p03 module into final_proyect
+git add .
+git commit -m "Integrate p03 tokenizer module into final project"
+git push -u origin feature/final-integrate-p03-tokenizer
 ```
 
 ### Deliverables Convention
 
-For each practice, the repository should contain:
+For each practice folder (`p1` to `p11`), the repository should contain:
 
 - Source code with incremental commit history.
-- A short technical PDF report (in the path: `docs/reports/pXX.pdf`)  
-    including: activity summary, problems log, and technical solutions.
-    
+- A short technical PDF report in a project-specific path (for example: `pXX/docs/report/pXX.pdf`) including: activity summary, problems log, and technical solutions.
+
+For `final_proyect`, the repository should contain:
+
+- The integrated source code that consolidates modules from practices.
+- Final project documentation and reports in `final_proyect/docs/report/`.
 
 ### Unix I/O Contract (CLI Behavior)
 
-All command-line programs in this repository must follow standard Unix conventions:
+All command-line programs across practices and the final project must follow standard Unix conventions:
 
 - Read input from `stdin`
 - Print results to `stdout`
@@ -111,7 +149,7 @@ All command-line programs in this repository must follow standard Unix conventio
 
 
 ### Implementation Language
-All practices and the semester project are implemented in C.
+All practice projects and the final project are implemented in C.
 
 ## Language Policy
 All repository content (documentation, comments, commit messages, issues) will be written in technical/academic English.
