@@ -23,7 +23,9 @@ SECCIÓN 2: Código C embebido
 - Incluye el header del scanner con #include "scanner.h".
 - Cierra el bloque.
 */
-
+%{
+# include "scanner.h"
+%}
 /*
 SECCIÓN 3: Estados léxicos
 - Declara un estado exclusivo llamado COMMENT para comentarios de bloque.
