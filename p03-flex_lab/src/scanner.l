@@ -159,7 +159,7 @@ SECCIÓN 10: Operadores simples
 
 /* Simple Logic Operators */
 
-"!"                { return TOK_NEG; }
+"!"                { return TOK_NOT; }
 
 /* Simple Arithmetic Operators */
 
@@ -177,10 +177,10 @@ SECCIÓN 11: Delimitadores
 
 "("                { return TOK_LPAREN; }
 ")"                { return TOK_RPAREN; }
-"{"                { return TOK_LBRACKET; }
-"}"                { return TOK_RBRACKET; }
-"["                { return TOK_LBRACE; }
-"]"                { return TOK_RBRACE; }
+"{"                { return TOK_LBRACE; }
+"}"                { return TOK_RBRACE; }
+"["                { return TOK_LBRACKET; }
+"]"                { return TOK_RBRACKET; }
 ","                { return TOK_COMMA; }
 ";"                { return TOK_SEMICOLON; }
 
