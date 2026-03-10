@@ -134,6 +134,27 @@ SECCIÓN 10: Operadores simples
 - Devuelven los TOK_* correspondientes.
 */
 
+/* Simple assignation */
+
+"="                { return TOK_ASSIGN; }
+
+/* Simple comparation */
+
+"<"                { return TOK_LT; }
+">"                { return TOK_GT; }
+
+/* Simple Logic Operators */
+
+"!"                { return TOK_NEG; }
+
+/* Simple Arithmetic Operators */
+
+"+"                { return TOK_PLUS; }
+"-"                { return TOK_MINUS; }
+"*"                { return TOK_MUL; }
+"/"                { return TOK_DIV; }
+"%"                { return TOK_MOD; }
+
 /*
 SECCIÓN 11: Delimitadores
 - (, ), {, }, [, ], ,, ;
