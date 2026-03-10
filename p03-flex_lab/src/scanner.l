@@ -194,6 +194,9 @@ SECCIÓN 13: Fin de archivo y error genérico
 - Regla final con . que retorna TOK_ERROR para cualquier carácter no reconocido.
 */
 
+<<EOF>>            { return TOK_EOF; }
+.                  { return TOK_ERROR; }
+
 /*
 SECCIÓN 14: Cierre de reglas
 - Coloca el separador %% final.
