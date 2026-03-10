@@ -15,6 +15,8 @@ SECCIÓN 1: Opciones globales de Flex
 Pista: la línea esperada usa dos opciones en una sola directiva %option.
 */
 
+%option noyywrap yylineno
+
 /*
 SECCIÓN 2: Código C embebido
 - Abre el bloque %{ ... %}.
