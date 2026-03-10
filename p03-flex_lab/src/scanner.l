@@ -79,7 +79,7 @@ SECCIÓN 6: Comentarios
 <COMMENT>"*/"      { BEGIN(INITIAL); }
 <COMMENT>\n        { /* ignore, and yylineno gets updated */ }
 <COMMENT>.         { /* ignore any other char */ }
-<COMMENT><<EOF>>   { return TOK_ERROR; }
+<COMMENT><<EOF>>   { BEGIN(INITIAL); return TOK_ERROR; }
 "//"[^\n]*         { /* ignore line comments */ }
 
 /*
