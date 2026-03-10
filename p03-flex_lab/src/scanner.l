@@ -106,6 +106,28 @@ SECCIÓN 9: Operadores compuestos (siempre antes de los simples)
 - Devuelven los TOK_* correspondientes.
 */
 
+/* Operators of assignation */
+
+"++"               { return TOK_INC; }
+"--"               { return TOK_DEC; }
+"+="               { return TOK_PLUS_ASSIGN; }
+"-="               { return TOK_MINUS_ASSIGN; }
+"*="               { return TOK_MUL_ASSIGN; }
+"/="               { return TOK_DIV_ASSIGN; }
+"%="               { return TOK_MOD_ASSIGN; }
+
+/* Operators of comparation */
+
+"=="               { return TOK_EQ; }
+"!="               { return TOK_NEQ; }
+"<="               { return TOK_LE; }
+">="               { return TOK_GE; }
+
+/* Logic Operators */
+
+"&&"               { return TOK_AND; }
+"||"               { return TOK_OR; }
+
 /*
 SECCIÓN 10: Operadores simples
 - =, <, >, !, +, -, *, /, %
