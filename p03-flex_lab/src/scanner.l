@@ -161,6 +161,16 @@ SECCIÓN 11: Delimitadores
 - Devuelven los TOK_* correspondientes.
 */
 
+"("                { return TOK_LPAREN; }
+")"                { return TOK_RPAREN; }
+"{"                { return TOK_LBRACKET; }
+"}"                { return TOK_RBRACKET; }
+"["                { return TOK_LBRACE; }
+"]"                { return TOK_RBRACE; }
+","                { return TOK_COMMA; }
+";"                { return TOK_SEMICOLON; }
+
+
 /*
 SECCIÓN 12: Literales e identificadores (orden importante)
 - Primero FLOAT -> TOK_FLOAT_LITERAL.
