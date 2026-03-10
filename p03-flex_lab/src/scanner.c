@@ -5,22 +5,15 @@
 extern int yylex(void);
 extern char *yytext;
 
-int main(void)
-{
-	/*
-	Plantilla guiada de main:
-	1) Declara una variable entera llamada token.
-	2) Crea un while que llame a yylex() y asigne su resultado a token.
-	3) Mantén el ciclo mientras token sea distinto de TOK_EOF.
-	4) Dentro del while imprime cada token con formato:
-		[NOMBRE_TOKEN:LEXEMA]
-		usando scanner_token_name(token) y yytext.
-	5) Al terminar, retorna 0.
 
-	Resultado esperado (cuando lo completen):
-	- Lee tokens hasta EOF.
-	- Muestra cada token y su lexema en una línea.
-	*/
+
+int main(void){
+
+	int token;
+	while ((token = yylex()) != TOK_EOF){
+		printf("[%s:%s]\n", scanner_token_name(token), yytext);
+	}
+	return 0;
 }
 
 const char *scanner_token_name(int token)
@@ -84,14 +77,4 @@ const char *scanner_token_name(int token)
 		case TOK_SEMICOLON: return "SEMICOLON";
 		default: return "UNKNOWN";
 	}
-}
-
-
-int main(void){
-
-	int token;
-	while ((token = yylex()) != TOK_EOF){
-		printf("[%s:%s]\n", scanner_token_name(token), yytext);
-	}
-	return 0;
 }
