@@ -13,8 +13,8 @@ int main(void)
 	2) Crea un while que llame a yylex() y asigne su resultado a token.
 	3) Mantén el ciclo mientras token sea distinto de TOK_EOF.
 	4) Dentro del while imprime cada token con formato:
-	   [NOMBRE_TOKEN:LEXEMA]
-	   usando scanner_token_name(token) y yytext.
+		[NOMBRE_TOKEN:LEXEMA]
+		usando scanner_token_name(token) y yytext.
 	5) Al terminar, retorna 0.
 
 	Resultado esperado (cuando lo completen):
@@ -84,4 +84,14 @@ const char *scanner_token_name(int token)
 		case TOK_SEMICOLON: return "SEMICOLON";
 		default: return "UNKNOWN";
 	}
+}
+
+
+int main(void){
+
+	int token;
+	while ((token = yylex()) != TOK_EOF){
+		printf("[%s:%s]\n", scanner_token_name(token), yytext);
+	}
+	return 0;
 }
