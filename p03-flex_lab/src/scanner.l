@@ -35,7 +35,6 @@ SECCIÓN 3: Estados léxicos
 
 %x COMMENT
 
-
 /*
 SECCIÓN 4: Macros (definiciones de regex reutilizables)
 - ID: identificadores tipo C (empieza con letra o _, luego letras/dígitos/_).
@@ -43,6 +42,12 @@ SECCIÓN 4: Macros (definiciones de regex reutilizables)
 - FLOAT: número con punto opcionalmente con exponente, o entero con exponente.
 - WS: espacios en blanco (espacio, tab, retorno de carro y salto de línea).
 */
+
+ID [a-zA-Z_][a-zA-Z0-9_]*
+INT (0|[1-9][0-9]*)
+FLOAT (0|[1-9][0-9]*)\.[0-9]*
+WS [ \t\r\n]+
+
 
 /*
 SECCIÓN 5: Inicio de reglas
