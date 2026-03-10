@@ -182,6 +182,12 @@ SECCIÓN 12: Literales e identificadores (orden importante)
 Nota: si pones ID antes de keywords, las keywords se reconocerán como identificadores.
 */
 
+{FLOAT}            { return TOK_FLOAT_LITERAL; }
+{INT}              { return TOK_INT_LITERAL; }
+{CHAR}             { return TOK_CHAR_LITERAL; }
+{STRING}           { return TOK_STRING_LITERAL; }
+{ID}               { return TOK_IDENTIFIER; }
+
 /*
 SECCIÓN 13: Fin de archivo y error genérico
 - Regla <<EOF>> que retorna TOK_EOF.
