@@ -86,7 +86,7 @@ SECCIÓN 6: Comentarios
 SECCIÓN 7: Espacios en blanco
 - Regla usando {WS} para ignorar whitespace.
 */
-{WS}               { /* ignore whitespaces */ }" " 
+{WS}               { /* ignore whitespaces */ }
 
 /*
 SECCIÓN 8: Palabras reservadas
@@ -98,16 +98,20 @@ SECCIÓN 8: Palabras reservadas
 
 /* keywords of types */
 
-"int"              { return TOK_KW_INT; } "float"            { return TOK_KW_FLOAT; }
+"int"              { return TOK_KW_INT; }
+"float"            { return TOK_KW_FLOAT; }
 "double"           { return TOK_KW_DOUBLE; }
-"char"             { return TOK_KW_CHAR; } "void"             { return TOK_KW_VOID; }
+"char"             { return TOK_KW_CHAR; }
+"void"             { return TOK_KW_VOID; }
 
 /* keywords of control */
 
 "if"               { return TOK_KW_IF; }
-"else"             { return TOK_KW_ELSE; } "while"            { return TOK_KW_WHILE; }
+"else"             { return TOK_KW_ELSE; }
+"while"            { return TOK_KW_WHILE; }
 "for"              { return TOK_KW_FOR; }
-"return"           { return TOK_KW_RETURN; } "break"            { return TOK_KW_BREAK; }
+"return"           { return TOK_KW_RETURN; }
+"break"            { return TOK_KW_BREAK; }
 "continue"         { return TOK_KW_CONTINUE; }
 
 /*
