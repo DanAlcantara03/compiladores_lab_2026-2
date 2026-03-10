@@ -65,6 +65,13 @@ SECCIÓN 6: Comentarios
 - Regla para comentario de línea: "//" hasta antes de \n, sin devolver token.
 */
 
+"/*"          {BEGIN(COMMENT);}
+<COMMENT>"*/" {BEGIN(INITIAL);}
+<COMMENT>\n   
+<COMMENT>.
+<COMMENT><<EOF>> { return TOK_ERROR; }
+"//"[^\n]* 
+
 /*
 SECCIÓN 7: Espacios en blanco
 - Regla usando {WS} para ignorar whitespace.
