@@ -44,12 +44,15 @@ SECCIÓN 4: Macros (definiciones de regex reutilizables)
 */
 
 /* Auxiliar macro */
+
 ESC            \\.
+EXP ([eE][+-]?[0-9]+)
 
 /* Important Macros */
+
 ID [a-zA-Z_][a-zA-Z0-9_]*
 INT (0|[1-9][0-9]*)
-FLOAT (0|[1-9][0-9]*)\.[0-9]*
+FLOAT (({INT}\.[0-9]*({EXP})?)|({INT}{EXP}))
 CHAR   \'([^\\\n]|{ESC})\'
 STRING \"([^\\\n]|{ESC})*\"
 
