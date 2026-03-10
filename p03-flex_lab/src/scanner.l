@@ -43,9 +43,16 @@ SECCIÓN 4: Macros (definiciones de regex reutilizables)
 - WS: espacios en blanco (espacio, tab, retorno de carro y salto de línea).
 */
 
+/* Auxiliar macro */
+ESC            \\.
+
+/* Important Macros */
 ID [a-zA-Z_][a-zA-Z0-9_]*
 INT (0|[1-9][0-9]*)
 FLOAT (0|[1-9][0-9]*)\.[0-9]*
+CHAR   \'([^\\\n]|{ESC})\'
+STRING \"([^\\\n]|{ESC})*\"
+
 WS [ \t\r\n]+
 
 
