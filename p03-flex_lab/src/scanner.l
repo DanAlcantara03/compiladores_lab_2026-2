@@ -65,17 +65,18 @@ SECCIÓN 6: Comentarios
 - Regla para comentario de línea: "//" hasta antes de \n, sin devolver token.
 */
 
-"/*"          {BEGIN(COMMENT);}
-<COMMENT>"*/" {BEGIN(INITIAL);}
-<COMMENT>\n   
-<COMMENT>.
-<COMMENT><<EOF>> { return TOK_ERROR; }
-"//"[^\n]* 
+"/*"               { BEGIN(COMMENT); }
+<COMMENT>"*/"      { BEGIN(INITIAL); }
+<COMMENT>\n        { /* ignore, and yylineno gets updated */ }
+<COMMENT>.         { /* ignore any other char */ }
+<COMMENT><<EOF>>   { return TOK_ERROR; }
+"//"[^\n]*         { /* ignore line comments */ }
 
 /*
 SECCIÓN 7: Espacios en blanco
 - Regla usando {WS} para ignorar whitespace.
 */
+{WS}               { /* ignore whitespaces */ }" " 
 
 /*
 SECCIÓN 8: Palabras reservadas
