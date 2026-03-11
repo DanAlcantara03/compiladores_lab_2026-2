@@ -40,6 +40,8 @@ const char *scanner_token_name(int token)
 		case TOK_FLOAT_LITERAL: return "FLOAT_LITERAL";
 		case TOK_STRING_LITERAL: return "STRING_LITERAL";
 		case TOK_CHAR_LITERAL: return "CHAR_LITERAL";
+		case TOK_OCTAL_LITERAL: return "OCTAL_LITERAL";
+		case TOK_HEXADECIMAL_LITERAL: return "HEXADECIMAL_LITERAL";
 
 		case TOK_INC: return "INC";
 		case TOK_DEC: return "DEC";
