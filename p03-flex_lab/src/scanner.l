@@ -14,6 +14,9 @@ INT (0|[1-9][0-9]*)
 FLOAT (({INT}\.[0-9]*({EXP})?)|({INT}{EXP}))
 CHAR   \'([^\\\n]|{ESC})\'
 STRING \"([^\\\n]|{ESC})*\"
+OCTAL        0[oO][0-7]+
+HEXADECIMAL  0[xX][0-9a-fA-F]+
+
 
 WS [ \t\r\n]+
 
@@ -84,6 +87,8 @@ WS [ \t\r\n]+
 {INT}              { return TOK_INT_LITERAL; }
 {CHAR}             { return TOK_CHAR_LITERAL; }
 {STRING}           { return TOK_STRING_LITERAL; }
+{OCTAL}            { return TOK_OCTAL_LITERAL; }
+{HEXADECIMAL}      { return TOK_HEXADECIMAL_LITERAL; }
 {ID}               { return TOK_IDENTIFIER; }
 
 <<EOF>>            { return TOK_EOF; }
