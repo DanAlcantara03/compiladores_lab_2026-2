@@ -41,7 +41,13 @@ const char *symtab_intern(const char *lexeme)
         return NULL;
     }
 
-    node->lexeme = strdup(lexeme);
+    {
+        size_t len = strlen(lexeme) + 1;
+        node->lexeme = (char *)malloc(len);
+        if (node->lexeme) {
+            memcpy(node->lexeme, lexeme, len);
+        }
+    }
     if (!node->lexeme) {
         free(node);
         return NULL;
