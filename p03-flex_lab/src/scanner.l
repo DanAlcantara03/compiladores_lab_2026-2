@@ -90,7 +90,7 @@ WS [ \t\r\n]+
 {STRING}           { return TOK_STRING_LITERAL; }
 {OCTAL}            { return TOK_OCTAL_LITERAL; }
 {HEXADECIMAL}      { return TOK_HEXADECIMAL_LITERAL; }
-{ID}               { return TOK_IDENTIFIER; }
+{ID}               { (void)symtab_intern(yytext); return TOK_IDENTIFIER; }
 
 <<EOF>>            { return TOK_EOF; }
 .                  { return TOK_ERROR; }
