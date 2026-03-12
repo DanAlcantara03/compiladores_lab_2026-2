@@ -1,8 +1,32 @@
 %option noyywrap yylineno
 
 %{
+#include <stdio.h>
 #include "scanner.h"
 #include "symtab.h"
+
+int scanner_line = 1;
+int scanner_col = 1;
+int scanner_token_line = 1;
+int scanner_token_col = 1;
+
+static void scanner_advance_pos(const char *text, int len)
+{
+    int i;
+    scanner_token_line = scanner_line;
+    scanner_token_col = scanner_col;
+
+    for (i = 0; i < len; i++) {
+        if (text[i] == '\n') {
+            scanner_line++;
+            scanner_col = 1;
+        } else {
+            scanner_col++;
+        }
+    }
+}
+
+#define YY_USER_ACTION scanner_advance_pos(yytext, yyleng);
 %}
 
 %x COMMENT
@@ -93,5 +117,5 @@ WS [ \t\r\n]+
 {ID}               { (void)symtab_intern(yytext); return TOK_IDENTIFIER; }
 
 <<EOF>>            { return TOK_EOF; }
-.                  { return TOK_ERROR; }
+.                  { fprintf(stderr,"Lexical error at %d:%d near '%s'\n",scanner_token_line, scanner_token_col, yytext); return TOK_ERROR; }
 %%
