@@ -51,7 +51,7 @@ WS [ \t\r\n]+
 <COMMENT>"*/"      { BEGIN(INITIAL); }
 <COMMENT>\n        { /* ignore, and yylineno gets updated */ }
 <COMMENT>.         { /* ignore any other char */ }
-<COMMENT><<EOF>>   { BEGIN(INITIAL); return TOK_ERROR; }
+<COMMENT><<EOF>>   { BEGIN(INITIAL); fprintf(stderr,"Lexical comment error at %d:%d near '%s'\n",scanner_token_line, scanner_token_col, yytext); return TOK_ERROR; }
 "//"[^\n]*         { /* ignore line comments */ }
 
 {WS}               { /* ignore whitespaces */ }
@@ -114,10 +114,11 @@ WS [ \t\r\n]+
 {STRING}           { return TOK_STRING_LITERAL; }
 {OCTAL}            { return TOK_OCTAL_LITERAL; }
 {HEXADECIMAL}      { return TOK_HEXADECIMAL_LITERAL; }
-{ID}               { (void)symtab_intern(yytext); return TOK_IDENTIFIER; }
 
 "#"[ \t]*"include"[^\n]*   { return TOK_PP_INCLUDE; }
 "#"[ \t]*"define"[^\n]*    { return TOK_PP_DEFINE; }
+
+{ID}               { (void)symtab_intern(yytext); return TOK_IDENTIFIER; }
 
 <<EOF>>            { return TOK_EOF; }
 .                  { fprintf(stderr,"Lexical error at %d:%d near '%s'\n",scanner_token_line, scanner_token_col, yytext); return TOK_ERROR; }
