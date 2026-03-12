@@ -2,6 +2,7 @@
 
 %{
 #include "scanner.h"
+#include "symtab.h"
 %}
 
 %x COMMENT
