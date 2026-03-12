@@ -38,3 +38,38 @@ target_compile_features(scanner PUBLIC c_std_11)
 target_compile_features(scanner_cli PRIVATE c_std_11)
 
 add_custom_target(generate_scanner DEPENDS ${SCANNER_GEN_C_FILE} ${SCANNER_GEN_HEADER})
+
+enable_testing()
+
+add_executable(test_symtab
+	${CMAKE_CURRENT_SOURCE_DIR}/tests/test_symtab.c
+	${CMAKE_CURRENT_SOURCE_DIR}/src/symtab.c
+)
+
+target_include_directories(test_symtab
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_compile_features(test_symtab PRIVATE c_std_11)
+add_test(NAME unit_symtab COMMAND test_symtab)
+
+add_library(scanner_token_name_obj OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/src/scanner.c)
+target_include_directories(scanner_token_name_obj
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_compile_features(scanner_token_name_obj PRIVATE c_std_11)
+target_compile_definitions(scanner_token_name_obj PRIVATE main=scanner_cli_main)
+
+add_executable(test_scanner_token_name
+	${CMAKE_CURRENT_SOURCE_DIR}/tests/test_scanner_token_name.c
+	${CMAKE_CURRENT_SOURCE_DIR}/src/symtab.c
+	$<TARGET_OBJECTS:scanner_token_name_obj>
+)
+
+target_include_directories(test_scanner_token_name
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_compile_features(test_scanner_token_name PRIVATE c_std_11)
+add_test(NAME unit_scanner_token_name COMMAND test_scanner_token_name)
