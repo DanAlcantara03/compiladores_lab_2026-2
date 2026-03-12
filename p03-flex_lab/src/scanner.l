@@ -10,6 +10,9 @@ int scanner_col = 1;
 int scanner_token_line = 1;
 int scanner_token_col = 1;
 
+/*
+ * Tracks token start (scanner_token_*) and advances the current scanner position (scanner_line/scanner_col) over yytext.
+ */
 static void scanner_advance_pos(const char *text, int len)
 {
     int i;
@@ -26,6 +29,7 @@ static void scanner_advance_pos(const char *text, int len)
     }
 }
 
+/* Flex hook executed before each rule action; keeps line/column in sync. */
 #define YY_USER_ACTION scanner_advance_pos(yytext, yyleng);
 %}
 
