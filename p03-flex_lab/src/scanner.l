@@ -116,6 +116,9 @@ WS [ \t\r\n]+
 {HEXADECIMAL}      { return TOK_HEXADECIMAL_LITERAL; }
 {ID}               { (void)symtab_intern(yytext); return TOK_IDENTIFIER; }
 
+"#"[ \t]*"include"[^\n]*   { return TOK_PP_INCLUDE; }
+"#"[ \t]*"define"[^\n]*    { return TOK_PP_DEFINE; }
+
 <<EOF>>            { return TOK_EOF; }
 .                  { fprintf(stderr,"Lexical error at %d:%d near '%s'\n",scanner_token_line, scanner_token_col, yytext); return TOK_ERROR; }
 %%
