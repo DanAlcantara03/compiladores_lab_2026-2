@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "scanner.h"
+#include "symtab.h"
 
 extern int yylex(void);
 extern char *yytext;
@@ -13,6 +14,7 @@ int main(void){
 	while ((token = yylex()) != TOK_EOF){
 		printf("[%s:%s]\n", scanner_token_name(token), yytext);
 	}
+	symtab_destroy();
 	return 0;
 }
 
