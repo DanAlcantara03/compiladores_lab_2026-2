@@ -6,8 +6,7 @@
 extern int yylex(void);
 extern char *yytext;
 
-
-
+/* Tokenize stdin and print each token/lexeme pair until EOF. */
 int main(void){
 
 	int token;
@@ -18,6 +17,7 @@ int main(void){
 	return 0;
 }
 
+/* Maps token ids to human-readable names used by the CLI output. */
 const char *scanner_token_name(int token)
 {
 	switch (token) {

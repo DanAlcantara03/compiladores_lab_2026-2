@@ -5,13 +5,16 @@
 
 #define SYMTAB_SIZE 1024
 
+/* Linked-list node used for separate chaining inside each hash bucket. */
 typedef struct SymNode{
     char *lexeme; 
     struct SymNode *next;
 } SymNode; 
 
+/* Hash table buckets. Each entry is the head of a chained list. */
 static SymNode *table[SYMTAB_SIZE];
 
+/* djb2 hash variant for string keys. */
 static unsigned long hash_str(const char *s){
     unsigned long h = 5381;
     int c; 
@@ -26,6 +29,7 @@ const char *symtab_intern(const char *lexeme)
     unsigned long i = hash_str(lexeme);
     SymNode *node;
 
+    /* Reuse existing storage if the lexeme is already interned. */
     for (node = table[i]; node != NULL; node = node->next) {
         if (strcmp(node->lexeme, lexeme) == 0) {
             return node->lexeme;
@@ -43,11 +47,13 @@ const char *symtab_intern(const char *lexeme)
         return NULL;
     }
 
+    /* Insert at bucket head (separate chaining collision strategy). */
     node->next = table[i];
     table[i] = node;
     return node->lexeme;
 }
 
+/* Free every bucket and every interned lexeme. */
 void symtab_destroy(void)
 {
     int i;
