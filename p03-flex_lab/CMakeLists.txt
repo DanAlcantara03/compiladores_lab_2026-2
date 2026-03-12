@@ -16,7 +16,7 @@ add_custom_command(
 	VERBATIM
 )
 
-add_library(scanner STATIC ${SCANNER_GEN_C_FILE})
+add_library(scanner STATIC ${SCANNER_GEN_C_FILE} ${CMAKE_CURRENT_SOURCE_DIR}/src/symtab.c)
 
 add_executable(scanner_cli ${CMAKE_CURRENT_SOURCE_DIR}/src/scanner.c)
 
