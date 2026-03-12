@@ -63,5 +63,9 @@ typedef enum ScannerToken {
 } ScannerToken;
 
 const char *scanner_token_name(int token);
+extern int scanner_line;
+extern int scanner_col;
+extern int scanner_token_line;
+extern int scanner_token_col;
 
 #endif // SCANNER_H
