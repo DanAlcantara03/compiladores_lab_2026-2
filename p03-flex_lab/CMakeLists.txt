@@ -63,8 +63,12 @@ target_compile_definitions(scanner_token_name_obj PRIVATE main=scanner_cli_main)
 
 add_executable(test_scanner_token_name
 	${CMAKE_CURRENT_SOURCE_DIR}/tests/test_scanner_token_name.c
-	${CMAKE_CURRENT_SOURCE_DIR}/src/symtab.c
 	$<TARGET_OBJECTS:scanner_token_name_obj>
+)
+
+target_link_libraries(test_scanner_token_name
+	PRIVATE
+		scanner
 )
 
 target_include_directories(test_scanner_token_name
