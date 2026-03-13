@@ -4,6 +4,15 @@
 
 #include "symtab.h"
 
+static void run_subtest(const char *name, void (*fn)(void))
+{
+	symtab_destroy();
+	printf("Subtest %s: ejecutando...\n", name);
+	fn();
+	printf("Subtest %s: ya sucedio y paso correctamente.\n", name);
+	symtab_destroy();
+}
+
 /**
  * @brief Verifies interning returns the same pointer for the same lexeme.
  */
@@ -79,12 +88,10 @@ static void test_destroy_and_reuse(void)
  */
 int main(void)
 {
-	test_reuses_existing_lexeme();
-	test_distinct_lexemes_are_distinct_entries();
-	test_many_identifiers();
-	test_destroy_and_reuse();
-
-	symtab_destroy();
-	puts("test_symtab: OK");
+	run_subtest("reuses_existing_lexeme", test_reuses_existing_lexeme);
+	run_subtest("distinct_lexemes_are_distinct_entries", test_distinct_lexemes_are_distinct_entries);
+	run_subtest("many_identifiers", test_many_identifiers);
+	run_subtest("destroy_and_reuse", test_destroy_and_reuse);
+	puts("test_symtab: todos los subtests pasaron.");
 	return 0;
 }
