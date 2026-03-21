@@ -114,8 +114,37 @@ static int collect_first_for_non_terminal(
 	int epsilon_id,
 	symbol **out_first)
 {
-	// TODO: Read one FIRST row, append terminal symbols, and include epsilon when nullable.
+	if (g == NULL || nullable == NULL || out_first == NULL || non_terminal_id < 0 || non_terminal_id >= g->num_non_terminals) {
+		return 0;
+	}
+	if (g->num_terminals > 0 && first_table == NULL) { 
+		return 0; 
+	}
+	*out_first = NULL;
+	int count = 0;
+	const bool *first_row = (g->num_terminals > 0) ? &first_table[non_terminal_id * g->num_terminals] : NULL;
+	for (int terminal_id = 0; terminal_id < g->num_terminals; terminal_id++) {
+		bool should_add = false;
+		if (terminal_id == epsilon_id) {
+			should_add = nullable[non_terminal_id];
+		} else if (first_row != NULL) {
+			should_add = first_row[terminal_id];
+		}
+		if (!should_add) { 
+			continue; 
+		}
+		if (g->terminals[terminal_id].symbol == NULL) { 
+			continue; 
+		}
+		if (!add_symbol_to_array(out_first, &count, g->terminals[terminal_id].symbol, true)) {
+			free_symbol_array(*out_first, count);
+			*out_first = NULL;
+			return 0;
+		}
+	}
+	return count;
 }
+
 
 /**
  * @brief Collects FOLLOW symbols for one non-terminal from the computed table.
