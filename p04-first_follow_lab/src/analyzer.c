@@ -8,7 +8,26 @@
  */
 static int find_terminal_id(const grammar *g, const char *name)
 {
-	// TODO: Validate inputs and search terminal list to return the matching terminal id.
+	if (g == NULL || name == NULL || g->terminals == NULL || g->num_terminals <= 0) { 
+		return -1; 
+	}
+	size_t name_length = strlen(name);
+	char first_char = name[0];
+	for (int i = 0; i < g->num_terminals; i++) {
+		if (g->terminals[i].symbol == NULL) { 
+			continue; 
+		}
+		if ((size_t)g->terminals[i].symbol_length != name_length) {
+			continue; 
+		}
+		if (g->terminals[i].symbol[0] != first_char){ 
+			continue; 
+		}
+		if (strcmp(g->terminals[i].symbol, name) == 0) {
+			return i;
+		}
+	}
+	return -1;
 }
 
 /**
