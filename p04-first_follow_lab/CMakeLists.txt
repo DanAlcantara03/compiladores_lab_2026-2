@@ -9,3 +9,8 @@ add_executable(first_and_follow
     ./src/grammar.c
     ./src/analyzer.c
 )
+
+target_include_directories(first_and_follow
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
