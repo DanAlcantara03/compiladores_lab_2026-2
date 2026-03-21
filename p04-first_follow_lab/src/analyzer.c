@@ -237,5 +237,11 @@ int compute_follow_for_start_symbol(const grammar *g, symbol **out_follow)
  */
 void free_symbol_array(symbol *symbols, int count)
 {
-	// TODO: Release each symbol string and then free the symbol array buffer.
+	if (symbols == NULL) { 
+		return; 
+	}
+	for (int i = 0; i < count; i++) {
+		free(symbols[i].symbol);
+	}
+	free(symbols);
 }
