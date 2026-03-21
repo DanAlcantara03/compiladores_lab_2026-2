@@ -40,8 +40,27 @@ static int find_terminal_id(const grammar *g, const char *name)
  */
 static bool add_symbol_to_array(symbol **arr, int *count, const char *text, bool is_terminal)
 {
-	// TODO: Reallocate the array, duplicate symbol text, fill metadata, and increase count.
+
+	if (arr == NULL || count == NULL || text == NULL || *count < 0) {
+		return false;
+	}
+	symbol *resized = (symbol *)realloc(*arr, (size_t)(*count + 1) *sizeof(symbol));
+	if (resized == NULL) { 
+		return false; 
+	}
+	*arr = resized;
+	char *symbol_copy = strdup(text);
+	if (symbol_copy == NULL) { 
+		return false; 
+	}
+	(*arr)[*count].symbol = symbol_copy;
+	(*arr)[*count].symbol_length = (int)strlen(text);
+	(*arr)[*count].is_terminal = is_terminal;
+	(*count)++;
+	return true;
+
 }
+
 
 /**
  * @brief Builds FIRST and nullable tables for all non-terminals.
