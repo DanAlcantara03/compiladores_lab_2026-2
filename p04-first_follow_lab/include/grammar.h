@@ -55,6 +55,12 @@ typedef struct grammar
 grammar* create_grammar(const char* grammar_file_content);
 
 /**
+ * @brief Releases all heap-allocated memory owned by a grammar instance.
+ * @param g Grammar to release.
+ */
+void free_grammar(grammar *g);
+
+/**
  * @brief Prints grammar symbols and productions to stdout.
  * @param g Grammar to print.
  * @return This function does not return a value.
