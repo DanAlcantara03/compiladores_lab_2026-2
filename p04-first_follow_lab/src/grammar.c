@@ -186,6 +186,50 @@ grammar *create_grammar(const char *grammar_file_content)
 }
 
 /**
+ * @brief Releases every allocation owned by a grammar instance.
+ * @param g Grammar to release.
+ * @return This function does not return a value.
+ */
+void free_grammar(grammar *g)
+{
+    if (g == NULL)
+    {
+        return;
+    }
+
+    if (g->non_terminals != NULL)
+    {
+        for (int i = 0; i < g->num_non_terminals; i++)
+        {
+            free(g->non_terminals[i].symbol);
+        }
+        free(g->non_terminals);
+    }
+
+    if (g->terminals != NULL)
+    {
+        for (int i = 0; i < g->num_terminals; i++)
+        {
+            free(g->terminals[i].symbol);
+        }
+        free(g->terminals);
+    }
+
+    if (g->productions != NULL)
+    {
+        for (int i = 0; i < g->num_productions; i++)
+        {
+            free(g->productions[i].production_symbol_ids);
+        }
+        free(g->productions);
+    }
+
+    free(g->non_terminal_index.entries);
+    free(g->terminal_index.entries);
+    free(g);
+}
+
+/**
  * @brief Parses a symbol declaration line into a symbol array.
  * @param symbols_line Source line (for example terminals/non-terminals line).
  * @param symbols_count Output number of parsed symbols.
