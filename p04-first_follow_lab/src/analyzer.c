@@ -145,7 +145,6 @@ static int collect_first_for_non_terminal(
 	return count;
 }
 
-
 /**
  * @brief Collects FOLLOW symbols for one non-terminal from the computed table.
  * @param g Parsed grammar.
@@ -174,7 +173,20 @@ static int collect_follow_for_non_terminal(
  */
 int compute_first_for_non_terminal(const grammar *g, int non_terminal_id, symbol **out_first)
 {
-	// TODO: Validate inputs, compute shared FIRST tables, and collect FIRST for the requested non-terminal.
+	if (g == NULL || out_first == NULL || non_terminal_id < 0 || non_terminal_id >= g->num_non_terminals) {
+		return 0;
+	}
+	*out_first = NULL;
+	bool *first_table = NULL;
+	bool *nullable = NULL;
+	int epsilon_id = -1;
+	if (!compute_first_tables(g, &first_table, &nullable, &epsilon_id)) {
+		return 0; 
+	}
+	int count = collect_first_for_non_terminal(g, non_terminal_id,
+	first_table, nullable, epsilon_id, out_first);free(nullable);
+	free(first_table);
+	return count;
 }
 
 /**
