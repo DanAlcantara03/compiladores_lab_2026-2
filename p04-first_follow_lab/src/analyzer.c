@@ -72,7 +72,106 @@ static bool add_symbol_to_array(symbol **arr, int *count, const char *text, bool
  */
 static bool compute_first_tables(const grammar *g, bool **first_table, bool **nullable, int *epsilon_id)
 {
-	// TODO: Allocate FIRST/nullable tables and compute them with fixed-point propagation over productions.
+	// Reject invalid inputs early because all outputs are heap-allocated.
+	if (g == NULL || first_table == NULL || nullable == NULL || epsilon_id == NULL || g->num_non_terminals <= 0) {
+		return false;
+	}
+
+	*first_table = NULL;
+	*nullable = NULL;
+	// "epsilon" is handled separately through nullable flags.
+	*epsilon_id = find_terminal_id(g, "epsilon");
+
+	size_t first_size = (size_t)g->num_non_terminals * (size_t)g->num_terminals;
+	bool *first = NULL;
+	if (first_size > 0) {
+		// FIRST[A, t] is true when terminal t belongs to FIRST(A).
+		first = (bool *)calloc(first_size, sizeof(bool));
+		if (first == NULL) {
+			return false;
+		}
+	}
+
+	// nullable[A] is true when non-terminal A can derive epsilon.
+	bool *nullable_flags = (bool *)calloc((size_t)g->num_non_terminals, sizeof(bool));
+	if (nullable_flags == NULL) {
+		free(first);
+		return false;
+	}
+
+	bool changed;
+	do {
+		// Repeat until a full pass adds no new FIRST or nullable information.
+		changed = false;
+
+		for (int i = 0; i < g->num_productions; i++) {
+			const production *prod = &g->productions[i];
+			int lhs = prod->non_terminal_id;
+
+			if (lhs < 0 || lhs >= g->num_non_terminals) {
+				continue;
+			}
+
+			bool production_nullable = true;
+
+			for (int j = 0; j < prod->production_length; j++) {
+				int symbol_id = prod->production_symbol_ids[j];
+
+				if (symbol_id >= 0 && symbol_id < g->num_terminals) {
+					// A concrete terminal contributes directly to FIRST(lhs) and stops the scan.
+					if (symbol_id == *epsilon_id) {
+						continue;
+					}
+
+					if (first != NULL && !first[(lhs * g->num_terminals) + symbol_id]) {
+						first[(lhs * g->num_terminals) + symbol_id] = true;
+						changed = true;
+					}
+					production_nullable = false;
+					break;
+				}
+
+				int rhs_non_terminal_id = symbol_id - g->num_terminals;
+				if (rhs_non_terminal_id < 0 || rhs_non_terminal_id >= g->num_non_terminals) {
+					production_nullable = false;
+					break;
+				}
+
+				// Merge FIRST(rhs symbol) into FIRST(lhs), excluding epsilon.
+				for (int terminal_id = 0; terminal_id < g->num_terminals; terminal_id++) {
+					if (terminal_id == *epsilon_id) {
+						continue;
+					}
+					if (first == NULL || !first[(rhs_non_terminal_id * g->num_terminals) + terminal_id]) {
+						continue;
+					}
+					if (first[(lhs * g->num_terminals) + terminal_id]) {
+						continue;
+					}
+
+					first[(lhs * g->num_terminals) + terminal_id] = true;
+					changed = true;
+				}
+
+				// If this symbol is not nullable, later symbols cannot affect this production prefix.
+				if (!nullable_flags[rhs_non_terminal_id]) {
+					production_nullable = false;
+					break;
+				}
+			}
+
+			// The whole production is nullable only if every symbol was nullable or epsilon.
+			if (production_nullable && !nullable_flags[lhs]) {
+				nullable_flags[lhs] = true;
+				changed = true;
+			}
+		}
+	} while (changed);
+
+	*first_table = first;
+	*nullable = nullable_flags;
+
+	return true;
 }
 
 /**
