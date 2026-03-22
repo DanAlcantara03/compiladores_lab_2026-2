@@ -415,16 +415,21 @@ static int collect_follow_for_non_terminal(
  */
 int compute_first_for_non_terminal(const grammar *g, int non_terminal_id, symbol **out_first)
 {
+	// Reject invalid requests before allocating shared tables.
 	if (g == NULL || out_first == NULL || non_terminal_id < 0 || non_terminal_id >= g->num_non_terminals) {
 		return 0;
 	}
 	*out_first = NULL;
+
+	// Build the common FIRST/nullable tables used by all non-terminals.
 	bool *first_table = NULL;
 	bool *nullable = NULL;
 	int epsilon_id = -1;
 	if (!compute_first_tables(g, &first_table, &nullable, &epsilon_id)) {
 		return 0; 
 	}
+
+	// Extract only the FIRST set of the requested non-terminal.
 	int count = collect_first_for_non_terminal(g, non_terminal_id,
 	first_table, nullable, epsilon_id, out_first);free(nullable);
 	free(first_table);
