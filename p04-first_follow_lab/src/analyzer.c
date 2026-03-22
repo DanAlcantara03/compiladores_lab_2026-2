@@ -8,21 +8,24 @@
  */
 static int find_terminal_id(const grammar *g, const char *name)
 {
-	if (g == NULL || name == NULL || g->terminals == NULL || g->num_terminals <= 0) { 
-		return -1; 
+	// Validate the grammar and target name before scanning the terminal list.
+	if (g == NULL || name == NULL || g->terminals == NULL || g->num_terminals <= 0) {
+		return -1;
 	}
+	// Cache cheap filters to skip obvious non-matches quickly.
 	size_t name_length = strlen(name);
 	char first_char = name[0];
-	for (int i = 0; i < g->num_terminals; i++) {
-		if (g->terminals[i].symbol == NULL) { 
-			continue; 
+	for (int i = 0;i < g->num_terminals;i++) {
+		if (g->terminals[i].symbol == NULL) {
+			continue;
 		}
 		if ((size_t)g->terminals[i].symbol_length != name_length) {
-			continue; 
+			continue;
 		}
-		if (g->terminals[i].symbol[0] != first_char){ 
-			continue; 
+		if (g->terminals[i].symbol[0] != first_char){
+			continue;
 		}
+		// Return the first terminal whose full text matches the requested name.
 		if (strcmp(g->terminals[i].symbol, name) == 0) {
 			return i;
 		}
@@ -33,7 +36,7 @@ static int find_terminal_id(const grammar *g, const char *name)
 /**
  * @brief Appends one symbol to a dynamically sized symbol array.
  * @param arr Target array pointer.
- * @param count Current element count; incremented on success.
+ * @param count Current element count;incremented on success.
  * @param text Symbol text to copy.
  * @param is_terminal Indicates terminal/non-terminal role.
  * @return true on success, false on allocation failure.
@@ -41,18 +44,22 @@ static int find_terminal_id(const grammar *g, const char *name)
 static bool add_symbol_to_array(symbol **arr, int *count, const char *text, bool is_terminal)
 {
 
+	// Validate the destination array metadata before growing it.
 	if (arr == NULL || count == NULL || text == NULL || *count < 0) {
 		return false;
 	}
+	// Grow the array by one slot for the new symbol.
 	symbol *resized = (symbol *)realloc(*arr, (size_t)(*count + 1) *sizeof(symbol));
-	if (resized == NULL) { 
-		return false; 
+	if (resized == NULL) {
+		return false;
 	}
 	*arr = resized;
+	// Duplicate the symbol text because the caller keeps ownership of the input string.
 	char *symbol_copy = strdup(text);
-	if (symbol_copy == NULL) { 
-		return false; 
+	if (symbol_copy == NULL) {
+		return false;
 	}
+	// Fill the new entry and mark it as initialized.
 	(*arr)[*count].symbol = symbol_copy;
 	(*arr)[*count].symbol_length = (int)strlen(text);
 	(*arr)[*count].is_terminal = is_terminal;
@@ -104,7 +111,7 @@ static bool compute_first_tables(const grammar *g, bool **first_table, bool **nu
 		// Repeat until a full pass adds no new FIRST or nullable information.
 		changed = false;
 
-		for (int i = 0; i < g->num_productions; i++) {
+		for (int i = 0;i < g->num_productions;i++) {
 			const production *prod = &g->productions[i];
 			int lhs = prod->non_terminal_id;
 
@@ -114,7 +121,7 @@ static bool compute_first_tables(const grammar *g, bool **first_table, bool **nu
 
 			bool production_nullable = true;
 
-			for (int j = 0; j < prod->production_length; j++) {
+			for (int j = 0;j < prod->production_length;j++) {
 				int symbol_id = prod->production_symbol_ids[j];
 
 				if (symbol_id >= 0 && symbol_id < g->num_terminals) {
@@ -138,7 +145,7 @@ static bool compute_first_tables(const grammar *g, bool **first_table, bool **nu
 				}
 
 				// Merge FIRST(rhs symbol) into FIRST(lhs), excluding epsilon.
-				for (int terminal_id = 0; terminal_id < g->num_terminals; terminal_id++) {
+				for (int terminal_id = 0;terminal_id < g->num_terminals;terminal_id++) {
 					if (terminal_id == *epsilon_id) {
 						continue;
 					}
@@ -227,7 +234,7 @@ static bool compute_follow_table(
 		// Repeat until no FOLLOW set grows during a full pass.
 		changed = false;
 
-		for (int i = 0; i < g->num_productions; i++) {
+		for (int i = 0;i < g->num_productions;i++) {
 			const production *prod = &g->productions[i];
 			const int lhs = prod->non_terminal_id;
 
@@ -238,7 +245,7 @@ static bool compute_follow_table(
 			// Start from FOLLOW(lhs) and move right-to-left through the production.
 			memcpy(trailer, &follow[lhs * follow_cols], follow_row_size);
 
-			for (int j = prod->production_length - 1; j >= 0; j--) {
+			for (int j = prod->production_length - 1;j >= 0;j--) {
 				const int symbol_id = prod->production_symbol_ids[j];
 
 				if (symbol_id >= 0 && symbol_id < g->num_terminals) {
@@ -260,7 +267,7 @@ static bool compute_follow_table(
 
 				// Every symbol currently in trailer belongs to FOLLOW(this non-terminal).
 				bool *rhs_follow = &follow[rhs_non_terminal_id * follow_cols];
-				for (int col = 0; col < follow_cols; col++) {
+				for (int col = 0;col < follow_cols;col++) {
 					if (!trailer[col] || rhs_follow[col]) {
 						continue;
 					}
@@ -276,7 +283,7 @@ static bool compute_follow_table(
 				if (first_table != NULL) {
 					// FIRST(current symbol) also belongs to the suffix seen by symbols on the left.
 					const bool *rhs_first = &first_table[rhs_non_terminal_id * g->num_terminals];
-					for (int terminal_id = 0; terminal_id < g->num_terminals; terminal_id++) {
+					for (int terminal_id = 0;terminal_id < g->num_terminals;terminal_id++) {
 						if (terminal_id == epsilon_id || !rhs_first[terminal_id]) {
 							continue;
 						}
@@ -290,7 +297,7 @@ static bool compute_follow_table(
 				}
 			}
 		}
-	} while (changed);
+	}while (changed);
 
 	free(trailer);
 	*out_follow = follow;
@@ -316,28 +323,34 @@ static int collect_first_for_non_terminal(
 	int epsilon_id,
 	symbol **out_first)
 {
+	// Validate the requested row and the auxiliary FIRST/nullable tables.
 	if (g == NULL || nullable == NULL || out_first == NULL || non_terminal_id < 0 || non_terminal_id >= g->num_non_terminals) {
 		return 0;
 	}
-	if (g->num_terminals > 0 && first_table == NULL) { 
-		return 0; 
+	// FIRST rows exist only when the grammar has at least one terminal.
+	if (g->num_terminals > 0 && first_table == NULL) {
+		return 0;
 	}
 	*out_first = NULL;
 	int count = 0;
+	// Read only the FIRST row that belongs to the target non-terminal.
 	const bool *first_row = (g->num_terminals > 0) ? &first_table[non_terminal_id * g->num_terminals] : NULL;
-	for (int terminal_id = 0; terminal_id < g->num_terminals; terminal_id++) {
+	for (int terminal_id = 0;terminal_id < g->num_terminals;terminal_id++) {
 		bool should_add = false;
+		// Epsilon is included only when the non-terminal is nullable.
 		if (terminal_id == epsilon_id) {
 			should_add = nullable[non_terminal_id];
-		} else if (first_row != NULL) {
+		}else if (first_row != NULL) {
+			// Regular terminals are copied from the computed FIRST row.
 			should_add = first_row[terminal_id];
 		}
-		if (!should_add) { 
-			continue; 
+		if (!should_add) {
+			continue;
 		}
-		if (g->terminals[terminal_id].symbol == NULL) { 
-			continue; 
+		if (g->terminals[terminal_id].symbol == NULL) {
+			continue;
 		}
+		// Copy each collected terminal into the output array.
 		if (!add_symbol_to_array(out_first, &count, g->terminals[terminal_id].symbol, true)) {
 			free_symbol_array(*out_first, count);
 			*out_first = NULL;
@@ -378,7 +391,7 @@ static int collect_follow_for_non_terminal(
 	// Read only the FOLLOW row that belongs to the target non-terminal.
 	const bool *follow_row = &follow_table[non_terminal_id * follow_cols];
 
-	for (int terminal_id = 0; terminal_id < g->num_terminals; terminal_id++) {
+	for (int terminal_id = 0;terminal_id < g->num_terminals;terminal_id++) {
 		// Skip terminals that are not present in FOLLOW and never expose epsilon here.
 		if (terminal_id == epsilon_id || !follow_row[terminal_id]) {
 			continue;
@@ -426,7 +439,7 @@ int compute_first_for_non_terminal(const grammar *g, int non_terminal_id, symbol
 	bool *nullable = NULL;
 	int epsilon_id = -1;
 	if (!compute_first_tables(g, &first_table, &nullable, &epsilon_id)) {
-		return 0; 
+		return 0;
 	}
 
 	// Extract only the FIRST set of the requested non-terminal.
@@ -483,8 +496,8 @@ int compute_follow_for_non_terminal(const grammar *g, int non_terminal_id, symbo
  */
 int compute_first_for_start_symbol(const grammar *g, symbol **out_first)
 {
-	if (g == NULL || g->num_non_terminals <= 0) { 
-		return 0; 
+	if (g == NULL || g->num_non_terminals <= 0) {
+		return 0;
 	}
 	return compute_first_for_non_terminal(g, 0, out_first);
 }
@@ -497,8 +510,8 @@ int compute_first_for_start_symbol(const grammar *g, symbol **out_first)
  */
 int compute_follow_for_start_symbol(const grammar *g, symbol **out_follow)
 {
-	if (g == NULL || g->num_non_terminals <= 0) { 
-		return 0; 
+	if (g == NULL || g->num_non_terminals <= 0) {
+		return 0;
 	}
 	return compute_follow_for_non_terminal(g, 0, out_follow);
 }
@@ -511,10 +524,10 @@ int compute_follow_for_start_symbol(const grammar *g, symbol **out_follow)
  */
 void free_symbol_array(symbol *symbols, int count)
 {
-	if (symbols == NULL) { 
-		return; 
+	if (symbols == NULL) {
+		return;
 	}
-	for (int i = 0; i < count; i++) {
+	for (int i = 0;i < count;i++) {
 		free(symbols[i].symbol);
 	}
 	free(symbols);
