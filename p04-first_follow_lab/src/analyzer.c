@@ -192,7 +192,110 @@ static bool compute_follow_table(
 	bool **out_follow,
 	int *out_follow_cols)
 {
-	// TODO: Allocate FOLLOW structures and propagate FOLLOW sets right-to-left until convergence.
+	// FOLLOW needs valid grammar metadata plus the nullable information.
+	if (g == NULL || nullable == NULL || out_follow == NULL || out_follow_cols == NULL || g->num_non_terminals <= 0) {
+		return false;
+	}
+	if (g->num_terminals > 0 && first_table == NULL) {
+		return false;
+	}
+
+	*out_follow = NULL;
+	*out_follow_cols = 0;
+
+	// Extra column stores the end marker '$'.
+	const int follow_cols = g->num_terminals + 1;
+	const size_t follow_row_size = (size_t)follow_cols * sizeof(bool);
+	const size_t follow_size = (size_t)g->num_non_terminals * (size_t)follow_cols;
+
+	bool *follow = (bool *)calloc(follow_size, sizeof(bool));
+	if (follow == NULL) {
+		return false;
+	}
+
+	bool *trailer = (bool *)malloc(follow_row_size);
+	if (trailer == NULL) {
+		free(follow);
+		return false;
+	}
+
+	// '$' is stored in the extra column and belongs to FOLLOW(start).
+	follow[g->num_terminals] = true;
+
+	bool changed;
+	do {
+		// Repeat until no FOLLOW set grows during a full pass.
+		changed = false;
+
+		for (int i = 0; i < g->num_productions; i++) {
+			const production *prod = &g->productions[i];
+			const int lhs = prod->non_terminal_id;
+
+			if (lhs < 0 || lhs >= g->num_non_terminals) {
+				continue;
+			}
+
+			// Start from FOLLOW(lhs) and move right-to-left through the production.
+			memcpy(trailer, &follow[lhs * follow_cols], follow_row_size);
+
+			for (int j = prod->production_length - 1; j >= 0; j--) {
+				const int symbol_id = prod->production_symbol_ids[j];
+
+				if (symbol_id >= 0 && symbol_id < g->num_terminals) {
+					// A terminal becomes the new suffix seen by symbols to its left.
+					if (symbol_id == epsilon_id) {
+						continue;
+					}
+
+					memset(trailer, 0, follow_row_size);
+					trailer[symbol_id] = true;
+					continue;
+				}
+
+				const int rhs_non_terminal_id = symbol_id - g->num_terminals;
+				if (rhs_non_terminal_id < 0 || rhs_non_terminal_id >= g->num_non_terminals) {
+					memset(trailer, 0, follow_row_size);
+					continue;
+				}
+
+				// Every symbol currently in trailer belongs to FOLLOW(this non-terminal).
+				bool *rhs_follow = &follow[rhs_non_terminal_id * follow_cols];
+				for (int col = 0; col < follow_cols; col++) {
+					if (!trailer[col] || rhs_follow[col]) {
+						continue;
+					}
+					rhs_follow[col] = true;
+					changed = true;
+				}
+
+				// If the current symbol is not nullable, the old trailer cannot pass further left.
+				if (!nullable[rhs_non_terminal_id]) {
+					memset(trailer, 0, follow_row_size);
+				}
+
+				if (first_table != NULL) {
+					// FIRST(current symbol) also belongs to the suffix seen by symbols on the left.
+					const bool *rhs_first = &first_table[rhs_non_terminal_id * g->num_terminals];
+					for (int terminal_id = 0; terminal_id < g->num_terminals; terminal_id++) {
+						if (terminal_id == epsilon_id || !rhs_first[terminal_id]) {
+							continue;
+						}
+						trailer[terminal_id] = true;
+					}
+				}
+
+				// '$' keeps moving left only through nullable symbols.
+				if (!nullable[rhs_non_terminal_id]) {
+					trailer[g->num_terminals] = false;
+				}
+			}
+		}
+	} while (changed);
+
+	free(trailer);
+	*out_follow = follow;
+	*out_follow_cols = follow_cols;
+	return true;
 }
 
 /**
