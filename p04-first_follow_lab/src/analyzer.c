@@ -363,7 +363,47 @@ static int collect_follow_for_non_terminal(
 	int follow_cols,
 	symbol **out_follow)
 {
-	// TODO: Read one FOLLOW row, append terminal symbols, and include end marker '$' when present.
+	// Validate the requested row and output pointer before reading the table.
+	if (g == NULL || follow_table == NULL || out_follow == NULL || non_terminal_id < 0 || non_terminal_id >= g->num_non_terminals) {
+		return 0;
+	}
+	// FOLLOW has one extra column reserved for '$'.
+	if (follow_cols != g->num_terminals + 1) {
+		return 0;
+	}
+
+	*out_follow = NULL;
+	int count = 0;
+	const int epsilon_id = find_terminal_id(g, "epsilon");
+	// Read only the FOLLOW row that belongs to the target non-terminal.
+	const bool *follow_row = &follow_table[non_terminal_id * follow_cols];
+
+	for (int terminal_id = 0; terminal_id < g->num_terminals; terminal_id++) {
+		// Skip terminals that are not present in FOLLOW and never expose epsilon here.
+		if (terminal_id == epsilon_id || !follow_row[terminal_id]) {
+			continue;
+		}
+		if (g->terminals[terminal_id].symbol == NULL) {
+			continue;
+		}
+		// Copy each terminal symbol into the output array.
+		if (!add_symbol_to_array(out_follow, &count, g->terminals[terminal_id].symbol, true)) {
+			free_symbol_array(*out_follow, count);
+			*out_follow = NULL;
+			return 0;
+		}
+	}
+
+	// The extra column indicates whether '$' belongs to this FOLLOW set.
+	if (follow_row[g->num_terminals]) {
+		if (!add_symbol_to_array(out_follow, &count, "$", true)) {
+			free_symbol_array(*out_follow, count);
+			*out_follow = NULL;
+			return 0;
+		}
+	}
+
+	return count;
 }
 
 /**
