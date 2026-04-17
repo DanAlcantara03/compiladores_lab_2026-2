@@ -1,8 +1,8 @@
-# Cadenas Correctas
+
 q
 q ^ p
 q ^ p ^ p ^ p ^ p
-# Cadenas Incorrectas
+
 p ^ p
 q ^ q
 p

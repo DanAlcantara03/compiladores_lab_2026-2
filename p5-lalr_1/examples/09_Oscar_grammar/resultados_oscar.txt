@@ -1,0 +1,90 @@
+Loaded rules:
+  p0: P -> P * R
+  p1: P -> R
+  p2: R -> id
+
+Parsing table:
++-------+-----+------+-----+-----+-----+
+| State | A:* | A:id | A:$ | G:P | G:R |
++-------+-----+------+-----+-----+-----+
+| 0     | -   | s1   | -   | 2   | 3   |
+| 1     | r2  | -    | r2  | -   | -   |
+| 2     | s4  | -    | acc | -   | -   |
+| 3     | r1  | -    | r1  | -   | -   |
+| 4     | -   | s1   | -   | -   | 5   |
+| 5     | r0  | -    | r0  | -   | -   |
++-------+-----+------+-----+-----+-----+
+
+Case 1: id
++------+--------+-----------+-----------+---------------------------------------+
+| Step | Stack  | Lookahead | Decision  | Detail                                |
++------+--------+-----------+-----------+---------------------------------------+
+| 1    | 0      | id        | shift->1  | consume lookahead and push next state |
+| 2    | 0 id 1 | $         | reduce p2 | p2: R -> id                           |
+| 3    | 0 R 3  | $         | reduce p1 | p1: P -> R                            |
+| 4    | 0 P 2  | $         | accept    | successful parse                      |
++------+--------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 2: id * id
++------+----------------+-----------+-----------+---------------------------------------+
+| Step | Stack          | Lookahead | Decision  | Detail                                |
++------+----------------+-----------+-----------+---------------------------------------+
+| 1    | 0              | id        | shift->1  | consume lookahead and push next state |
+| 2    | 0 id 1         | *         | reduce p2 | p2: R -> id                           |
+| 3    | 0 R 3          | *         | reduce p1 | p1: P -> R                            |
+| 4    | 0 P 2          | *         | shift->4  | consume lookahead and push next state |
+| 5    | 0 P 2 * 4      | id        | shift->1  | consume lookahead and push next state |
+| 6    | 0 P 2 * 4 id 1 | $         | reduce p2 | p2: R -> id                           |
+| 7    | 0 P 2 * 4 R 5  | $         | reduce p0 | p0: P -> P * R                        |
+| 8    | 0 P 2          | $         | accept    | successful parse                      |
++------+----------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 3: id * id * id
++------+----------------+-----------+-----------+---------------------------------------+
+| Step | Stack          | Lookahead | Decision  | Detail                                |
++------+----------------+-----------+-----------+---------------------------------------+
+| 1    | 0              | id        | shift->1  | consume lookahead and push next state |
+| 2    | 0 id 1         | *         | reduce p2 | p2: R -> id                           |
+| 3    | 0 R 3          | *         | reduce p1 | p1: P -> R                            |
+| 4    | 0 P 2          | *         | shift->4  | consume lookahead and push next state |
+| 5    | 0 P 2 * 4      | id        | shift->1  | consume lookahead and push next state |
+| 6    | 0 P 2 * 4 id 1 | *         | reduce p2 | p2: R -> id                           |
+| 7    | 0 P 2 * 4 R 5  | *         | reduce p0 | p0: P -> P * R                        |
+| 8    | 0 P 2          | *         | shift->4  | consume lookahead and push next state |
+| 9    | 0 P 2 * 4      | id        | shift->1  | consume lookahead and push next state |
+| 10   | 0 P 2 * 4 id 1 | $         | reduce p2 | p2: R -> id                           |
+| 11   | 0 P 2 * 4 R 5  | $         | reduce p0 | p0: P -> P * R                        |
+| 12   | 0 P 2          | $         | accept    | successful parse                      |
++------+----------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 4: * id
++------+-------+-----------+----------+------------------------------------------+
+| Step | Stack | Lookahead | Decision | Detail                                   |
++------+-------+-----------+----------+------------------------------------------+
+| 1    | 0     | *         | error    | no valid action for this state/lookahead |
++------+-------+-----------+----------+------------------------------------------+
+Outcome: Syntax error at state 0 with lookahead '*'.
+
+Case 5: id *
++------+-----------+-----------+-----------+------------------------------------------+
+| Step | Stack     | Lookahead | Decision  | Detail                                   |
++------+-----------+-----------+-----------+------------------------------------------+
+| 1    | 0         | id        | shift->1  | consume lookahead and push next state    |
+| 2    | 0 id 1    | *         | reduce p2 | p2: R -> id                              |
+| 3    | 0 R 3     | *         | reduce p1 | p1: P -> R                               |
+| 4    | 0 P 2     | *         | shift->4  | consume lookahead and push next state    |
+| 5    | 0 P 2 * 4 | $         | error     | no valid action for this state/lookahead |
++------+-----------+-----------+-----------+------------------------------------------+
+Outcome: Syntax error at state 4 with lookahead '$'.
+
+Case 6: id id
++------+--------+-----------+----------+------------------------------------------+
+| Step | Stack  | Lookahead | Decision | Detail                                   |
++------+--------+-----------+----------+------------------------------------------+
+| 1    | 0      | id        | shift->1 | consume lookahead and push next state    |
+| 2    | 0 id 1 | id        | error    | no valid action for this state/lookahead |
++------+--------+-----------+----------+------------------------------------------+
+Outcome: Syntax error at state 1 with lookahead 'id'.

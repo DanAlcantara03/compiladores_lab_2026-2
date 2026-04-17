@@ -1,0 +1,97 @@
+Loaded rules:
+  p0: S -> A B
+  p1: A -> a A
+  p2: A -> a
+  p3: B -> b
+
+Parsing table:
++-------+-----+-----+-----+-----+-----+-----+
+| State | A:a | A:b | A:$ | G:S | G:A | G:B |
++-------+-----+-----+-----+-----+-----+-----+
+| 0     | s1  | -   | -   | 2   | 3   | -   |
+| 1     | s1  | r2  | -   | -   | 4   | -   |
+| 2     | -   | -   | acc | -   | -   | -   |
+| 3     | -   | s5  | -   | -   | -   | 6   |
+| 4     | -   | r1  | -   | -   | -   | -   |
+| 5     | -   | -   | r3  | -   | -   | -   |
+| 6     | -   | -   | r0  | -   | -   | -   |
++-------+-----+-----+-----+-----+-----+-----+
+
+Case 1: a b
++------+-----------+-----------+-----------+---------------------------------------+
+| Step | Stack     | Lookahead | Decision  | Detail                                |
++------+-----------+-----------+-----------+---------------------------------------+
+| 1    | 0         | a         | shift->1  | consume lookahead and push next state |
+| 2    | 0 a 1     | b         | reduce p2 | p2: A -> a                            |
+| 3    | 0 A 3     | b         | shift->5  | consume lookahead and push next state |
+| 4    | 0 A 3 b 5 | $         | reduce p3 | p3: B -> b                            |
+| 5    | 0 A 3 B 6 | $         | reduce p0 | p0: S -> A B                          |
+| 6    | 0 S 2     | $         | accept    | successful parse                      |
++------+-----------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 2: a a b
++------+-----------+-----------+-----------+---------------------------------------+
+| Step | Stack     | Lookahead | Decision  | Detail                                |
++------+-----------+-----------+-----------+---------------------------------------+
+| 1    | 0         | a         | shift->1  | consume lookahead and push next state |
+| 2    | 0 a 1     | a         | shift->1  | consume lookahead and push next state |
+| 3    | 0 a 1 a 1 | b         | reduce p2 | p2: A -> a                            |
+| 4    | 0 a 1 A 4 | b         | reduce p1 | p1: A -> a A                          |
+| 5    | 0 A 3     | b         | shift->5  | consume lookahead and push next state |
+| 6    | 0 A 3 b 5 | $         | reduce p3 | p3: B -> b                            |
+| 7    | 0 A 3 B 6 | $         | reduce p0 | p0: S -> A B                          |
+| 8    | 0 S 2     | $         | accept    | successful parse                      |
++------+-----------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 3: a a a a b
++------+-------------------+-----------+-----------+---------------------------------------+
+| Step | Stack             | Lookahead | Decision  | Detail                                |
++------+-------------------+-----------+-----------+---------------------------------------+
+| 1    | 0                 | a         | shift->1  | consume lookahead and push next state |
+| 2    | 0 a 1             | a         | shift->1  | consume lookahead and push next state |
+| 3    | 0 a 1 a 1         | a         | shift->1  | consume lookahead and push next state |
+| 4    | 0 a 1 a 1 a 1     | a         | shift->1  | consume lookahead and push next state |
+| 5    | 0 a 1 a 1 a 1 a 1 | b         | reduce p2 | p2: A -> a                            |
+| 6    | 0 a 1 a 1 a 1 A 4 | b         | reduce p1 | p1: A -> a A                          |
+| 7    | 0 a 1 a 1 A 4     | b         | reduce p1 | p1: A -> a A                          |
+| 8    | 0 a 1 A 4         | b         | reduce p1 | p1: A -> a A                          |
+| 9    | 0 A 3             | b         | shift->5  | consume lookahead and push next state |
+| 10   | 0 A 3 b 5         | $         | reduce p3 | p3: B -> b                            |
+| 11   | 0 A 3 B 6         | $         | reduce p0 | p0: S -> A B                          |
+| 12   | 0 S 2             | $         | accept    | successful parse                      |
++------+-------------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 4: a
++------+-------+-----------+----------+------------------------------------------+
+| Step | Stack | Lookahead | Decision | Detail                                   |
++------+-------+-----------+----------+------------------------------------------+
+| 1    | 0     | a         | shift->1 | consume lookahead and push next state    |
+| 2    | 0 a 1 | $         | error    | no valid action for this state/lookahead |
++------+-------+-----------+----------+------------------------------------------+
+Outcome: Syntax error at state 1 with lookahead '$'.
+
+Case 5: a b a
++------+-----------+-----------+-----------+------------------------------------------+
+| Step | Stack     | Lookahead | Decision  | Detail                                   |
++------+-----------+-----------+-----------+------------------------------------------+
+| 1    | 0         | a         | shift->1  | consume lookahead and push next state    |
+| 2    | 0 a 1     | b         | reduce p2 | p2: A -> a                               |
+| 3    | 0 A 3     | b         | shift->5  | consume lookahead and push next state    |
+| 4    | 0 A 3 b 5 | a         | error     | no valid action for this state/lookahead |
++------+-----------+-----------+-----------+------------------------------------------+
+Outcome: Syntax error at state 5 with lookahead 'a'.
+
+Case 6: a a a a
++------+-------------------+-----------+----------+------------------------------------------+
+| Step | Stack             | Lookahead | Decision | Detail                                   |
++------+-------------------+-----------+----------+------------------------------------------+
+| 1    | 0                 | a         | shift->1 | consume lookahead and push next state    |
+| 2    | 0 a 1             | a         | shift->1 | consume lookahead and push next state    |
+| 3    | 0 a 1 a 1         | a         | shift->1 | consume lookahead and push next state    |
+| 4    | 0 a 1 a 1 a 1     | a         | shift->1 | consume lookahead and push next state    |
+| 5    | 0 a 1 a 1 a 1 a 1 | $         | error    | no valid action for this state/lookahead |
++------+-------------------+-----------+----------+------------------------------------------+
+Outcome: Syntax error at state 1 with lookahead '$'.

@@ -1,0 +1,107 @@
+Loaded rules:
+  p0: E -> E + T
+  p1: E -> T
+  p2: T -> ( E )
+  p3: T -> a
+
+Parsing table:
++-------+-----+-----+-----+-----+-----+-----+-----+
+| State | A:+ | A:( | A:) | A:a | A:$ | G:E | G:T |
++-------+-----+-----+-----+-----+-----+-----+-----+
+| 0     | -   | s1  | -   | s2  | -   | 3   | 4   |
+| 1     | -   | s1  | -   | s2  | -   | 5   | 4   |
+| 2     | r3  | -   | r3  | -   | r3  | -   | -   |
+| 3     | s6  | -   | -   | -   | acc | -   | -   |
+| 4     | r1  | -   | r1  | -   | r1  | -   | -   |
+| 5     | s6  | -   | s7  | -   | -   | -   | -   |
+| 6     | -   | s1  | -   | s2  | -   | -   | 8   |
+| 7     | r2  | -   | r2  | -   | r2  | -   | -   |
+| 8     | r0  | -   | r0  | -   | r0  | -   | -   |
++-------+-----+-----+-----+-----+-----+-----+-----+
+
+Case 1: ( a + a )
++------+-------------------+-----------+-----------+---------------------------------------+
+| Step | Stack             | Lookahead | Decision  | Detail                                |
++------+-------------------+-----------+-----------+---------------------------------------+
+| 1    | 0                 | (         | shift->1  | consume lookahead and push next state |
+| 2    | 0 ( 1             | a         | shift->2  | consume lookahead and push next state |
+| 3    | 0 ( 1 a 2         | +         | reduce p3 | p3: T -> a                            |
+| 4    | 0 ( 1 T 4         | +         | reduce p1 | p1: E -> T                            |
+| 5    | 0 ( 1 E 5         | +         | shift->6  | consume lookahead and push next state |
+| 6    | 0 ( 1 E 5 + 6     | a         | shift->2  | consume lookahead and push next state |
+| 7    | 0 ( 1 E 5 + 6 a 2 | )         | reduce p3 | p3: T -> a                            |
+| 8    | 0 ( 1 E 5 + 6 T 8 | )         | reduce p0 | p0: E -> E + T                        |
+| 9    | 0 ( 1 E 5         | )         | shift->7  | consume lookahead and push next state |
+| 10   | 0 ( 1 E 5 ) 7     | $         | reduce p2 | p2: T -> ( E )                        |
+| 11   | 0 T 4             | $         | reduce p1 | p1: E -> T                            |
+| 12   | 0 E 3             | $         | accept    | successful parse                      |
++------+-------------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 2: a + a + a
++------+---------------+-----------+-----------+---------------------------------------+
+| Step | Stack         | Lookahead | Decision  | Detail                                |
++------+---------------+-----------+-----------+---------------------------------------+
+| 1    | 0             | a         | shift->2  | consume lookahead and push next state |
+| 2    | 0 a 2         | +         | reduce p3 | p3: T -> a                            |
+| 3    | 0 T 4         | +         | reduce p1 | p1: E -> T                            |
+| 4    | 0 E 3         | +         | shift->6  | consume lookahead and push next state |
+| 5    | 0 E 3 + 6     | a         | shift->2  | consume lookahead and push next state |
+| 6    | 0 E 3 + 6 a 2 | +         | reduce p3 | p3: T -> a                            |
+| 7    | 0 E 3 + 6 T 8 | +         | reduce p0 | p0: E -> E + T                        |
+| 8    | 0 E 3         | +         | shift->6  | consume lookahead and push next state |
+| 9    | 0 E 3 + 6     | a         | shift->2  | consume lookahead and push next state |
+| 10   | 0 E 3 + 6 a 2 | $         | reduce p3 | p3: T -> a                            |
+| 11   | 0 E 3 + 6 T 8 | $         | reduce p0 | p0: E -> E + T                        |
+| 12   | 0 E 3         | $         | accept    | successful parse                      |
++------+---------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 3: ( a )
++------+---------------+-----------+-----------+---------------------------------------+
+| Step | Stack         | Lookahead | Decision  | Detail                                |
++------+---------------+-----------+-----------+---------------------------------------+
+| 1    | 0             | (         | shift->1  | consume lookahead and push next state |
+| 2    | 0 ( 1         | a         | shift->2  | consume lookahead and push next state |
+| 3    | 0 ( 1 a 2     | )         | reduce p3 | p3: T -> a                            |
+| 4    | 0 ( 1 T 4     | )         | reduce p1 | p1: E -> T                            |
+| 5    | 0 ( 1 E 5     | )         | shift->7  | consume lookahead and push next state |
+| 6    | 0 ( 1 E 5 ) 7 | $         | reduce p2 | p2: T -> ( E )                        |
+| 7    | 0 T 4         | $         | reduce p1 | p1: E -> T                            |
+| 8    | 0 E 3         | $         | accept    | successful parse                      |
++------+---------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 4: a +
++------+-----------+-----------+-----------+------------------------------------------+
+| Step | Stack     | Lookahead | Decision  | Detail                                   |
++------+-----------+-----------+-----------+------------------------------------------+
+| 1    | 0         | a         | shift->2  | consume lookahead and push next state    |
+| 2    | 0 a 2     | +         | reduce p3 | p3: T -> a                               |
+| 3    | 0 T 4     | +         | reduce p1 | p1: E -> T                               |
+| 4    | 0 E 3     | +         | shift->6  | consume lookahead and push next state    |
+| 5    | 0 E 3 + 6 | $         | error     | no valid action for this state/lookahead |
++------+-----------+-----------+-----------+------------------------------------------+
+Outcome: Syntax error at state 6 with lookahead '$'.
+
+Case 5: ( ( a
++------+---------------+-----------+-----------+------------------------------------------+
+| Step | Stack         | Lookahead | Decision  | Detail                                   |
++------+---------------+-----------+-----------+------------------------------------------+
+| 1    | 0             | (         | shift->1  | consume lookahead and push next state    |
+| 2    | 0 ( 1         | (         | shift->1  | consume lookahead and push next state    |
+| 3    | 0 ( 1 ( 1     | a         | shift->2  | consume lookahead and push next state    |
+| 4    | 0 ( 1 ( 1 a 2 | $         | reduce p3 | p3: T -> a                               |
+| 5    | 0 ( 1 ( 1 T 4 | $         | reduce p1 | p1: E -> T                               |
+| 6    | 0 ( 1 ( 1 E 5 | $         | error     | no valid action for this state/lookahead |
++------+---------------+-----------+-----------+------------------------------------------+
+Outcome: Syntax error at state 5 with lookahead '$'.
+
+Case 6: a a
++------+-------+-----------+----------+------------------------------------------+
+| Step | Stack | Lookahead | Decision | Detail                                   |
++------+-------+-----------+----------+------------------------------------------+
+| 1    | 0     | a         | shift->2 | consume lookahead and push next state    |
+| 2    | 0 a 2 | a         | error    | no valid action for this state/lookahead |
++------+-------+-----------+----------+------------------------------------------+
+Outcome: Syntax error at state 2 with lookahead 'a'.

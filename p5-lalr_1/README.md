@@ -7,6 +7,7 @@ This project builds a LALR(1) parsing table from a grammar file and parses a tok
 - CMake >= 3.16
 - A C compiler (MSVC, MinGW, or Clang)
 - Flex available in PATH (required by `find_package(FLEX REQUIRED)`)
+- Python 3 (optional, only for `tools/lalr_trace_driver.py`)
 
 ## Build
 
@@ -46,7 +47,7 @@ cmake --build build -j"$(nproc)"
 Install dependencies:
 
 ```bash
-sudo dnf install -y gcc gcc-c++ make cmake flex bison
+sudo dnf install -y gcc make cmake flex bison
 ```
 
 Build:
@@ -85,6 +86,27 @@ Expected output should end with:
 
 ```text
 Input accepted.
+```
+
+## Python Trace Driver
+
+The repository also includes a trace driver implemented in Python:
+
+```bash
+python3 ./tools/lalr_trace_driver.py \
+  ./examples/00_Example/grammar_decl.txt \
+  ./examples/00_Example/parse_table_decl.json \
+  ./examples/00_Example/input_decl.c
+```
+
+Optional output file:
+
+```bash
+python3 ./tools/lalr_trace_driver.py \
+  ./examples/00_Example/grammar_decl.txt \
+  ./examples/00_Example/parse_table_decl.json \
+  ./examples/00_Example/input_decl.c \
+  ./build/lalr_trace_report.txt
 ```
 
 ## Grammar File Format

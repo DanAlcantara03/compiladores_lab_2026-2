@@ -1,0 +1,104 @@
+Loaded rules:
+  p0: B -> bunny U
+  p1: B -> N
+  p2: U -> bun B
+  p3: N -> ny
+
+Parsing table:
++-------+---------+-------+------+-----+-----+-----+-----+
+| State | A:bunny | A:bun | A:ny | A:$ | G:B | G:U | G:N |
++-------+---------+-------+------+-----+-----+-----+-----+
+| 0     | s1      | -     | s2   | -   | 3   | -   | 4   |
+| 1     | -       | s5    | -    | -   | -   | 6   | -   |
+| 2     | -       | -     | -    | r3  | -   | -   | -   |
+| 3     | -       | -     | -    | acc | -   | -   | -   |
+| 4     | -       | -     | -    | r1  | -   | -   | -   |
+| 5     | s1      | -     | s2   | -   | 7   | -   | 4   |
+| 6     | -       | -     | -    | r0  | -   | -   | -   |
+| 7     | -       | -     | -    | r2  | -   | -   | -   |
++-------+---------+-------+------+-----+-----+-----+-----+
+
+Case 1: bunny bun ny
++------+----------------------+-----------+-----------+---------------------------------------+
+| Step | Stack                | Lookahead | Decision  | Detail                                |
++------+----------------------+-----------+-----------+---------------------------------------+
+| 1    | 0                    | bunny     | shift->1  | consume lookahead and push next state |
+| 2    | 0 bunny 1            | bun       | shift->5  | consume lookahead and push next state |
+| 3    | 0 bunny 1 bun 5      | ny        | shift->2  | consume lookahead and push next state |
+| 4    | 0 bunny 1 bun 5 ny 2 | $         | reduce p3 | p3: N -> ny                           |
+| 5    | 0 bunny 1 bun 5 N 4  | $         | reduce p1 | p1: B -> N                            |
+| 6    | 0 bunny 1 bun 5 B 7  | $         | reduce p2 | p2: U -> bun B                        |
+| 7    | 0 bunny 1 U 6        | $         | reduce p0 | p0: B -> bunny U                      |
+| 8    | 0 B 3                | $         | accept    | successful parse                      |
++------+----------------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 2: bunny bun bunny bun ny
++------+------------------------------------+-----------+-----------+---------------------------------------+
+| Step | Stack                              | Lookahead | Decision  | Detail                                |
++------+------------------------------------+-----------+-----------+---------------------------------------+
+| 1    | 0                                  | bunny     | shift->1  | consume lookahead and push next state |
+| 2    | 0 bunny 1                          | bun       | shift->5  | consume lookahead and push next state |
+| 3    | 0 bunny 1 bun 5                    | bunny     | shift->1  | consume lookahead and push next state |
+| 4    | 0 bunny 1 bun 5 bunny 1            | bun       | shift->5  | consume lookahead and push next state |
+| 5    | 0 bunny 1 bun 5 bunny 1 bun 5      | ny        | shift->2  | consume lookahead and push next state |
+| 6    | 0 bunny 1 bun 5 bunny 1 bun 5 ny 2 | $         | reduce p3 | p3: N -> ny                           |
+| 7    | 0 bunny 1 bun 5 bunny 1 bun 5 N 4  | $         | reduce p1 | p1: B -> N                            |
+| 8    | 0 bunny 1 bun 5 bunny 1 bun 5 B 7  | $         | reduce p2 | p2: U -> bun B                        |
+| 9    | 0 bunny 1 bun 5 bunny 1 U 6        | $         | reduce p0 | p0: B -> bunny U                      |
+| 10   | 0 bunny 1 bun 5 B 7                | $         | reduce p2 | p2: U -> bun B                        |
+| 11   | 0 bunny 1 U 6                      | $         | reduce p0 | p0: B -> bunny U                      |
+| 12   | 0 B 3                              | $         | accept    | successful parse                      |
++------+------------------------------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 3: bunny bun bunny bun bunny bun ny
++------+--------------------------------------------------+-----------+-----------+---------------------------------------+
+| Step | Stack                                            | Lookahead | Decision  | Detail                                |
++------+--------------------------------------------------+-----------+-----------+---------------------------------------+
+| 1    | 0                                                | bunny     | shift->1  | consume lookahead and push next state |
+| 2    | 0 bunny 1                                        | bun       | shift->5  | consume lookahead and push next state |
+| 3    | 0 bunny 1 bun 5                                  | bunny     | shift->1  | consume lookahead and push next state |
+| 4    | 0 bunny 1 bun 5 bunny 1                          | bun       | shift->5  | consume lookahead and push next state |
+| 5    | 0 bunny 1 bun 5 bunny 1 bun 5                    | bunny     | shift->1  | consume lookahead and push next state |
+| 6    | 0 bunny 1 bun 5 bunny 1 bun 5 bunny 1            | bun       | shift->5  | consume lookahead and push next state |
+| 7    | 0 bunny 1 bun 5 bunny 1 bun 5 bunny 1 bun 5      | ny        | shift->2  | consume lookahead and push next state |
+| 8    | 0 bunny 1 bun 5 bunny 1 bun 5 bunny 1 bun 5 ny 2 | $         | reduce p3 | p3: N -> ny                           |
+| 9    | 0 bunny 1 bun 5 bunny 1 bun 5 bunny 1 bun 5 N 4  | $         | reduce p1 | p1: B -> N                            |
+| 10   | 0 bunny 1 bun 5 bunny 1 bun 5 bunny 1 bun 5 B 7  | $         | reduce p2 | p2: U -> bun B                        |
+| 11   | 0 bunny 1 bun 5 bunny 1 bun 5 bunny 1 U 6        | $         | reduce p0 | p0: B -> bunny U                      |
+| 12   | 0 bunny 1 bun 5 bunny 1 bun 5 B 7                | $         | reduce p2 | p2: U -> bun B                        |
+| 13   | 0 bunny 1 bun 5 bunny 1 U 6                      | $         | reduce p0 | p0: B -> bunny U                      |
+| 14   | 0 bunny 1 bun 5 B 7                              | $         | reduce p2 | p2: U -> bun B                        |
+| 15   | 0 bunny 1 U 6                                    | $         | reduce p0 | p0: B -> bunny U                      |
+| 16   | 0 B 3                                            | $         | accept    | successful parse                      |
++------+--------------------------------------------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 4: bunny ny ny
++------+-----------+-----------+----------+------------------------------------------+
+| Step | Stack     | Lookahead | Decision | Detail                                   |
++------+-----------+-----------+----------+------------------------------------------+
+| 1    | 0         | bunny     | shift->1 | consume lookahead and push next state    |
+| 2    | 0 bunny 1 | ny        | error    | no valid action for this state/lookahead |
++------+-----------+-----------+----------+------------------------------------------+
+Outcome: Syntax error at state 1 with lookahead 'ny'.
+
+Case 5: bun bunny bun ny
++------+-------+-----------+----------+------------------------------------------+
+| Step | Stack | Lookahead | Decision | Detail                                   |
++------+-------+-----------+----------+------------------------------------------+
+| 1    | 0     | bun       | error    | no valid action for this state/lookahead |
++------+-------+-----------+----------+------------------------------------------+
+Outcome: Syntax error at state 0 with lookahead 'bun'.
+
+Case 6: bunny bun bunny ny
++------+-------------------------+-----------+----------+------------------------------------------+
+| Step | Stack                   | Lookahead | Decision | Detail                                   |
++------+-------------------------+-----------+----------+------------------------------------------+
+| 1    | 0                       | bunny     | shift->1 | consume lookahead and push next state    |
+| 2    | 0 bunny 1               | bun       | shift->5 | consume lookahead and push next state    |
+| 3    | 0 bunny 1 bun 5         | bunny     | shift->1 | consume lookahead and push next state    |
+| 4    | 0 bunny 1 bun 5 bunny 1 | ny        | error    | no valid action for this state/lookahead |
++------+-------------------------+-----------+----------+------------------------------------------+
+Outcome: Syntax error at state 1 with lookahead 'ny'.

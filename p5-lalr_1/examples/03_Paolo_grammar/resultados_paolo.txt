@@ -1,0 +1,140 @@
+Loaded rules:
+  p0: Program -> Program Stmt
+  p1: Program -> Stmt
+  p2: Stmt -> id = Expr ;
+  p3: Expr -> Expr + Term
+  p4: Expr -> Term
+  p5: Term -> Term * Factor
+  p6: Term -> Factor
+  p7: Factor -> num
+  p8: Factor -> id
+
+Parsing table:
++-------+------+-----+-----+-----+-----+-------+-----+-----------+--------+--------+--------+----------+
+| State | A:id | A:= | A:; | A:+ | A:* | A:num | A:$ | G:Program | G:Stmt | G:Expr | G:Term | G:Factor |
++-------+------+-----+-----+-----+-----+-------+-----+-----------+--------+--------+--------+----------+
+| 0     | s1   | -   | -   | -   | -   | -     | -   | 2         | 3      | -      | -      | -        |
+| 1     | -    | s4  | -   | -   | -   | -     | -   | -         | -      | -      | -      | -        |
+| 2     | s1   | -   | -   | -   | -   | -     | acc | -         | 5      | -      | -      | -        |
+| 3     | r1   | -   | -   | -   | -   | -     | r1  | -         | -      | -      | -      | -        |
+| 4     | s6   | -   | -   | -   | -   | s7    | -   | -         | -      | 8      | 9      | 10       |
+| 5     | r0   | -   | -   | -   | -   | -     | r0  | -         | -      | -      | -      | -        |
+| 6     | -    | -   | r8  | r8  | r8  | -     | -   | -         | -      | -      | -      | -        |
+| 7     | -    | -   | r7  | r7  | r7  | -     | -   | -         | -      | -      | -      | -        |
+| 8     | -    | -   | s11 | s12 | -   | -     | -   | -         | -      | -      | -      | -        |
+| 9     | -    | -   | r4  | r4  | s13 | -     | -   | -         | -      | -      | -      | -        |
+| 10    | -    | -   | r6  | r6  | r6  | -     | -   | -         | -      | -      | -      | -        |
+| 11    | r2   | -   | -   | -   | -   | -     | r2  | -         | -      | -      | -      | -        |
+| 12    | s6   | -   | -   | -   | -   | s7    | -   | -         | -      | -      | 14     | 10       |
+| 13    | s6   | -   | -   | -   | -   | s7    | -   | -         | -      | -      | -      | 15       |
+| 14    | -    | -   | r3  | r3  | s13 | -     | -   | -         | -      | -      | -      | -        |
+| 15    | -    | -   | r5  | r5  | r5  | -     | -   | -         | -      | -      | -      | -        |
++-------+------+-----+-----+-----+-----+-------+-----+-----------+--------+--------+--------+----------+
+
+Case 1: a = 10;
++------+------------------------+-----------+-----------+---------------------------------------+
+| Step | Stack                  | Lookahead | Decision  | Detail                                |
++------+------------------------+-----------+-----------+---------------------------------------+
+| 1    | 0                      | id        | shift->1  | consume lookahead and push next state |
+| 2    | 0 id 1                 | =         | shift->4  | consume lookahead and push next state |
+| 3    | 0 id 1 = 4             | num       | shift->7  | consume lookahead and push next state |
+| 4    | 0 id 1 = 4 num 7       | ;         | reduce p7 | p7: Factor -> num                     |
+| 5    | 0 id 1 = 4 Factor 10   | ;         | reduce p6 | p6: Term -> Factor                    |
+| 6    | 0 id 1 = 4 Term 9      | ;         | reduce p4 | p4: Expr -> Term                      |
+| 7    | 0 id 1 = 4 Expr 8      | ;         | shift->11 | consume lookahead and push next state |
+| 8    | 0 id 1 = 4 Expr 8 ; 11 | $         | reduce p2 | p2: Stmt -> id = Expr ;               |
+| 9    | 0 Stmt 3               | $         | reduce p1 | p1: Program -> Stmt                   |
+| 10   | 0 Program 2            | $         | accept    | successful parse                      |
++------+------------------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 2: b = a * 5;
++------+----------------------------------+-----------+-----------+---------------------------------------+
+| Step | Stack                            | Lookahead | Decision  | Detail                                |
++------+----------------------------------+-----------+-----------+---------------------------------------+
+| 1    | 0                                | id        | shift->1  | consume lookahead and push next state |
+| 2    | 0 id 1                           | =         | shift->4  | consume lookahead and push next state |
+| 3    | 0 id 1 = 4                       | id        | shift->6  | consume lookahead and push next state |
+| 4    | 0 id 1 = 4 id 6                  | *         | reduce p8 | p8: Factor -> id                      |
+| 5    | 0 id 1 = 4 Factor 10             | *         | reduce p6 | p6: Term -> Factor                    |
+| 6    | 0 id 1 = 4 Term 9                | *         | shift->13 | consume lookahead and push next state |
+| 7    | 0 id 1 = 4 Term 9 * 13           | num       | shift->7  | consume lookahead and push next state |
+| 8    | 0 id 1 = 4 Term 9 * 13 num 7     | ;         | reduce p7 | p7: Factor -> num                     |
+| 9    | 0 id 1 = 4 Term 9 * 13 Factor 15 | ;         | reduce p5 | p5: Term -> Term * Factor             |
+| 10   | 0 id 1 = 4 Term 9                | ;         | reduce p4 | p4: Expr -> Term                      |
+| 11   | 0 id 1 = 4 Expr 8                | ;         | shift->11 | consume lookahead and push next state |
+| 12   | 0 id 1 = 4 Expr 8 ; 11           | $         | reduce p2 | p2: Stmt -> id = Expr ;               |
+| 13   | 0 Stmt 3                         | $         | reduce p1 | p1: Program -> Stmt                   |
+| 14   | 0 Program 2                      | $         | accept    | successful parse                      |
++------+----------------------------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 3: x = 1;
++------+------------------------+-----------+-----------+---------------------------------------+
+| Step | Stack                  | Lookahead | Decision  | Detail                                |
++------+------------------------+-----------+-----------+---------------------------------------+
+| 1    | 0                      | id        | shift->1  | consume lookahead and push next state |
+| 2    | 0 id 1                 | =         | shift->4  | consume lookahead and push next state |
+| 3    | 0 id 1 = 4             | num       | shift->7  | consume lookahead and push next state |
+| 4    | 0 id 1 = 4 num 7       | ;         | reduce p7 | p7: Factor -> num                     |
+| 5    | 0 id 1 = 4 Factor 10   | ;         | reduce p6 | p6: Term -> Factor                    |
+| 6    | 0 id 1 = 4 Term 9      | ;         | reduce p4 | p4: Expr -> Term                      |
+| 7    | 0 id 1 = 4 Expr 8      | ;         | shift->11 | consume lookahead and push next state |
+| 8    | 0 id 1 = 4 Expr 8 ; 11 | $         | reduce p2 | p2: Stmt -> id = Expr ;               |
+| 9    | 0 Stmt 3               | $         | reduce p1 | p1: Program -> Stmt                   |
+| 10   | 0 Program 2            | $         | accept    | successful parse                      |
++------+------------------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 4: y = x + 2;
++------+----------------------------------+-----------+-----------+---------------------------------------+
+| Step | Stack                            | Lookahead | Decision  | Detail                                |
++------+----------------------------------+-----------+-----------+---------------------------------------+
+| 1    | 0                                | id        | shift->1  | consume lookahead and push next state |
+| 2    | 0 id 1                           | =         | shift->4  | consume lookahead and push next state |
+| 3    | 0 id 1 = 4                       | id        | shift->6  | consume lookahead and push next state |
+| 4    | 0 id 1 = 4 id 6                  | +         | reduce p8 | p8: Factor -> id                      |
+| 5    | 0 id 1 = 4 Factor 10             | +         | reduce p6 | p6: Term -> Factor                    |
+| 6    | 0 id 1 = 4 Term 9                | +         | reduce p4 | p4: Expr -> Term                      |
+| 7    | 0 id 1 = 4 Expr 8                | +         | shift->12 | consume lookahead and push next state |
+| 8    | 0 id 1 = 4 Expr 8 + 12           | num       | shift->7  | consume lookahead and push next state |
+| 9    | 0 id 1 = 4 Expr 8 + 12 num 7     | ;         | reduce p7 | p7: Factor -> num                     |
+| 10   | 0 id 1 = 4 Expr 8 + 12 Factor 10 | ;         | reduce p6 | p6: Term -> Factor                    |
+| 11   | 0 id 1 = 4 Expr 8 + 12 Term 14   | ;         | reduce p3 | p3: Expr -> Expr + Term               |
+| 12   | 0 id 1 = 4 Expr 8                | ;         | shift->11 | consume lookahead and push next state |
+| 13   | 0 id 1 = 4 Expr 8 ; 11           | $         | reduce p2 | p2: Stmt -> id = Expr ;               |
+| 14   | 0 Stmt 3                         | $         | reduce p1 | p1: Program -> Stmt                   |
+| 15   | 0 Program 2                      | $         | accept    | successful parse                      |
++------+----------------------------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 5: let a = 10
++------+--------+-----------+----------+------------------------------------------+
+| Step | Stack  | Lookahead | Decision | Detail                                   |
++------+--------+-----------+----------+------------------------------------------+
+| 1    | 0      | id        | shift->1 | consume lookahead and push next state    |
+| 2    | 0 id 1 | id        | error    | no valid action for this state/lookahead |
++------+--------+-----------+----------+------------------------------------------+
+Outcome: Syntax error at state 1 with lookahead 'id'.
+
+Case 6: b = a * ;
++------+------------------------+-----------+-----------+------------------------------------------+
+| Step | Stack                  | Lookahead | Decision  | Detail                                   |
++------+------------------------+-----------+-----------+------------------------------------------+
+| 1    | 0                      | id        | shift->1  | consume lookahead and push next state    |
+| 2    | 0 id 1                 | =         | shift->4  | consume lookahead and push next state    |
+| 3    | 0 id 1 = 4             | id        | shift->6  | consume lookahead and push next state    |
+| 4    | 0 id 1 = 4 id 6        | *         | reduce p8 | p8: Factor -> id                         |
+| 5    | 0 id 1 = 4 Factor 10   | *         | reduce p6 | p6: Term -> Factor                       |
+| 6    | 0 id 1 = 4 Term 9      | *         | shift->13 | consume lookahead and push next state    |
+| 7    | 0 id 1 = 4 Term 9 * 13 | ;         | error     | no valid action for this state/lookahead |
++------+------------------------+-----------+-----------+------------------------------------------+
+Outcome: Syntax error at state 13 with lookahead ';'.
+
+Case 7: = 10;
++------+-------+-----------+----------+------------------------------------------+
+| Step | Stack | Lookahead | Decision | Detail                                   |
++------+-------+-----------+----------+------------------------------------------+
+| 1    | 0     | =         | error    | no valid action for this state/lookahead |
++------+-------+-----------+----------+------------------------------------------+
+Outcome: Syntax error at state 0 with lookahead '='.

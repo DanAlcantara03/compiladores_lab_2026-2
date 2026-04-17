@@ -1,0 +1,93 @@
+Loaded rules:
+  p0: S -> S ^ B
+  p1: S -> q
+  p2: B -> p
+
+Parsing table:
++-------+-----+-----+-----+-----+-----+-----+
+| State | A:p | A:q | A:^ | A:$ | G:S | G:B |
++-------+-----+-----+-----+-----+-----+-----+
+| 0     | -   | s1  | -   | -   | 2   | -   |
+| 1     | -   | -   | r1  | r1  | -   | -   |
+| 2     | -   | -   | s3  | acc | -   | -   |
+| 3     | s4  | -   | -   | -   | -   | 5   |
+| 4     | -   | -   | r2  | r2  | -   | -   |
+| 5     | -   | -   | r0  | r0  | -   | -   |
++-------+-----+-----+-----+-----+-----+-----+
+
+Case 1: q
++------+-------+-----------+-----------+---------------------------------------+
+| Step | Stack | Lookahead | Decision  | Detail                                |
++------+-------+-----------+-----------+---------------------------------------+
+| 1    | 0     | q         | shift->1  | consume lookahead and push next state |
+| 2    | 0 q 1 | $         | reduce p1 | p1: S -> q                            |
+| 3    | 0 S 2 | $         | accept    | successful parse                      |
++------+-------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 2: q ^ p
++------+---------------+-----------+-----------+---------------------------------------+
+| Step | Stack         | Lookahead | Decision  | Detail                                |
++------+---------------+-----------+-----------+---------------------------------------+
+| 1    | 0             | q         | shift->1  | consume lookahead and push next state |
+| 2    | 0 q 1         | ^         | reduce p1 | p1: S -> q                            |
+| 3    | 0 S 2         | ^         | shift->3  | consume lookahead and push next state |
+| 4    | 0 S 2 ^ 3     | p         | shift->4  | consume lookahead and push next state |
+| 5    | 0 S 2 ^ 3 p 4 | $         | reduce p2 | p2: B -> p                            |
+| 6    | 0 S 2 ^ 3 B 5 | $         | reduce p0 | p0: S -> S ^ B                        |
+| 7    | 0 S 2         | $         | accept    | successful parse                      |
++------+---------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 3: q ^ p ^ p ^ p ^ p
++------+---------------+-----------+-----------+---------------------------------------+
+| Step | Stack         | Lookahead | Decision  | Detail                                |
++------+---------------+-----------+-----------+---------------------------------------+
+| 1    | 0             | q         | shift->1  | consume lookahead and push next state |
+| 2    | 0 q 1         | ^         | reduce p1 | p1: S -> q                            |
+| 3    | 0 S 2         | ^         | shift->3  | consume lookahead and push next state |
+| 4    | 0 S 2 ^ 3     | p         | shift->4  | consume lookahead and push next state |
+| 5    | 0 S 2 ^ 3 p 4 | ^         | reduce p2 | p2: B -> p                            |
+| 6    | 0 S 2 ^ 3 B 5 | ^         | reduce p0 | p0: S -> S ^ B                        |
+| 7    | 0 S 2         | ^         | shift->3  | consume lookahead and push next state |
+| 8    | 0 S 2 ^ 3     | p         | shift->4  | consume lookahead and push next state |
+| 9    | 0 S 2 ^ 3 p 4 | ^         | reduce p2 | p2: B -> p                            |
+| 10   | 0 S 2 ^ 3 B 5 | ^         | reduce p0 | p0: S -> S ^ B                        |
+| 11   | 0 S 2         | ^         | shift->3  | consume lookahead and push next state |
+| 12   | 0 S 2 ^ 3     | p         | shift->4  | consume lookahead and push next state |
+| 13   | 0 S 2 ^ 3 p 4 | ^         | reduce p2 | p2: B -> p                            |
+| 14   | 0 S 2 ^ 3 B 5 | ^         | reduce p0 | p0: S -> S ^ B                        |
+| 15   | 0 S 2         | ^         | shift->3  | consume lookahead and push next state |
+| 16   | 0 S 2 ^ 3     | p         | shift->4  | consume lookahead and push next state |
+| 17   | 0 S 2 ^ 3 p 4 | $         | reduce p2 | p2: B -> p                            |
+| 18   | 0 S 2 ^ 3 B 5 | $         | reduce p0 | p0: S -> S ^ B                        |
+| 19   | 0 S 2         | $         | accept    | successful parse                      |
++------+---------------+-----------+-----------+---------------------------------------+
+Outcome: Accepted.
+
+Case 4: p ^ p
++------+-------+-----------+----------+------------------------------------------+
+| Step | Stack | Lookahead | Decision | Detail                                   |
++------+-------+-----------+----------+------------------------------------------+
+| 1    | 0     | p         | error    | no valid action for this state/lookahead |
++------+-------+-----------+----------+------------------------------------------+
+Outcome: Syntax error at state 0 with lookahead 'p'.
+
+Case 5: q ^ q
++------+-----------+-----------+-----------+------------------------------------------+
+| Step | Stack     | Lookahead | Decision  | Detail                                   |
++------+-----------+-----------+-----------+------------------------------------------+
+| 1    | 0         | q         | shift->1  | consume lookahead and push next state    |
+| 2    | 0 q 1     | ^         | reduce p1 | p1: S -> q                               |
+| 3    | 0 S 2     | ^         | shift->3  | consume lookahead and push next state    |
+| 4    | 0 S 2 ^ 3 | q         | error     | no valid action for this state/lookahead |
++------+-----------+-----------+-----------+------------------------------------------+
+Outcome: Syntax error at state 3 with lookahead 'q'.
+
+Case 6: p
++------+-------+-----------+----------+------------------------------------------+
+| Step | Stack | Lookahead | Decision | Detail                                   |
++------+-------+-----------+----------+------------------------------------------+
+| 1    | 0     | p         | error    | no valid action for this state/lookahead |
++------+-------+-----------+----------+------------------------------------------+
+Outcome: Syntax error at state 0 with lookahead 'p'.
