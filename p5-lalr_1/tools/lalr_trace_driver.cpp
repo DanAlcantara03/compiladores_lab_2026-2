@@ -1116,4 +1116,124 @@ ParseResult parse_sequence(const ParseTable &table,
     return result;
 }
 
+// ==== Section 8: Result Presentation =====
+// ----- Printing tables and rules ------
+
+/**
+ * @brief Prints the horizontal separator line of an ASCII table.
+ * @param widths Width of each column.
+ */
+void print_separator(const std::vector<std::size_t> &widths)
+{
+    std::cout << '+';
+    for (std::size_t width : widths)
+    {
+        std::cout << std::string(width + 2, '-') << '+';
+    }
+    std::cout << '\n';
+}
+
+/**
+ * @brief Prints the full trace of an input string in tabular format.
+ * @param rows Trace rows.
+ */
+void print_trace_table(const std::vector<TraceRow> &rows)
+{
+    const std::vector<std::string> headers = {"Step", "Stack", "Token", "Action", "Rule"};
+    std::vector<std::size_t> widths(headers.size());
+
+    for (std::size_t i = 0; i < headers.size(); ++i)
+    {
+        widths[i] = headers[i].size();
+    }
+    for (const TraceRow &row : rows)
+    {
+        widths[0] = std::max(widths[0], row.step.size());
+        widths[1] = std::max(widths[1], row.stack.size());
+        widths[2] = std::max(widths[2], row.token.size());
+        widths[3] = std::max(widths[3], row.action.size());
+        widths[4] = std::max(widths[4], row.rule.size());
+    }
+
+    print_separator(widths);
+    std::cout << "| " << std::left << std::setw(static_cast<int>(widths[0])) << headers[0]
+              << " | " << std::setw(static_cast<int>(widths[1])) << headers[1]
+              << " | " << std::setw(static_cast<int>(widths[2])) << headers[2]
+              << " | " << std::setw(static_cast<int>(widths[3])) << headers[3]
+              << " | " << std::setw(static_cast<int>(widths[4])) << headers[4] << " |\n";
+    print_separator(widths);
+
+    for (const TraceRow &row : rows)
+    {
+        std::cout << "| " << std::left << std::setw(static_cast<int>(widths[0])) << row.step
+                  << " | " << std::setw(static_cast<int>(widths[1])) << row.stack
+                  << " | " << std::setw(static_cast<int>(widths[2])) << row.token
+                  << " | " << std::setw(static_cast<int>(widths[3])) << row.action
+                  << " | " << std::setw(static_cast<int>(widths[4])) << row.rule << " |\n";
+    }
+    print_separator(widths);
+}
+
+/**
+ * @brief Prints all rules loaded from the grammar.
+ * @param table Table with symbol names.
+ * @param grammar Already loaded grammar.
+ */
+void print_rules(const ParseTable &table, const Grammar &grammar)
+{
+    std::cout << "Loaded rules:\n";
+    for (int i = 0; i < static_cast<int>(grammar.productions.size()); ++i)
+    {
+        std::cout << "  " << rule_to_string(table, i, grammar.productions[i]) << '\n';
+    }
+    std::cout << '\n';
+}
+
 } // namespace
+
+
+// ==== Section 9: Entry Point =====
+// ----- Main program flow ------
+
+/**
+ * @brief Entry point of the LALR(1) trace driver.
+ * @param argc Number of arguments.
+ * @param argv Command-line arguments.
+ * @return 0 on successful execution; 1 on error.
+ */
+int main(int argc, char **argv)
+{
+    try
+    {
+        if (argc != 4)
+        {
+            std::cerr << "Usage: " << argv[0] << " <parse_table.json> <grammar.txt> <inputs.txt>\n";
+            return 1;
+        }
+
+        const ParseTable table = load_parse_table(argv[1]);
+        const Grammar grammar = load_grammar(argv[2], table);
+        const std::vector<InputSequence> inputs = load_inputs(argv[3], table);
+
+        if (inputs.empty())
+        {
+            throw std::runtime_error("The input file does not contain valid strings.");
+        }
+
+        print_rules(table, grammar);
+        for (std::size_t i = 0; i < inputs.size(); ++i)
+        {
+            std::cout << "Input " << (i + 1) << ": " << inputs[i].original_text << '\n';
+            const ParseResult result = parse_sequence(table, grammar, inputs[i]);
+            print_trace_table(result.rows);
+            std::cout << result.message << "\n\n";
+        }
+
+        return 0;
+    }
+    catch (const std::exception &error)
+    {
+        std::cerr << "Error: " << error.what() << '\n';
+        return 1;
+    }
+}
