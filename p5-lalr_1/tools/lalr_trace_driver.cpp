@@ -471,4 +471,450 @@ Grammar load_grammar(const std::string &path, const ParseTable &table)
     return grammar;
 }
 
+// ==== Section 5: Input Tokenization =====
+// ----- Subsection 5.1: Lexeme classification ------
+
+/**
+ * @brief Determines whether a lexeme has identifier form.
+ * @param token Lexeme to evaluate.
+ * @return true if the lexeme looks like an identifier; false otherwise.
+ */
+bool is_identifier_token(const std::string &token)
+{
+    if (token.empty())
+    {
+        return false;
+    }
+    if (std::isalpha(static_cast<unsigned char>(token.front())) == 0 && token.front() != '_')
+    {
+        return false;
+    }
+    return std::all_of(token.begin(),
+                       token.end(),
+                       [](char character)
+                       {
+                           return std::isalnum(static_cast<unsigned char>(character)) != 0 || character == '_';
+                       });
+}
+
+/**
+ * @brief Determines whether a lexeme has integer form.
+ * @param token Lexeme to evaluate.
+ * @return true if the lexeme looks like an integer; false otherwise.
+ */
+bool is_integer_token(const std::string &token)
+{
+    if (token.empty())
+    {
+        return false;
+    }
+
+    std::size_t start = (token.front() == '+' || token.front() == '-') ? 1U : 0U;
+    if (start >= token.size())
+    {
+        return false;
+    }
+
+    return std::all_of(token.begin() + static_cast<std::ptrdiff_t>(start),
+                       token.end(),
+                       [](char character)
+                       {
+                           return std::isdigit(static_cast<unsigned char>(character)) != 0;
+                       });
+}
+
+/**
+ * @brief Determines whether a lexeme has floating-point form.
+ * @param token Lexeme to evaluate.
+ * @return true if the lexeme looks like a float; false otherwise.
+ */
+bool is_float_token(const std::string &token)
+{
+    if (token.empty())
+    {
+        return false;
+    }
+
+    bool has_digit = false;
+    bool has_dot = false;
+    bool has_exponent = false;
+
+    for (std::size_t i = 0; i < token.size(); ++i)
+    {
+        const char current = token[i];
+        if (std::isdigit(static_cast<unsigned char>(current)) != 0)
+        {
+            has_digit = true;
+            continue;
+        }
+        if (current == '.' && !has_dot && !has_exponent)
+        {
+            has_dot = true;
+            continue;
+        }
+        if ((current == 'e' || current == 'E') && has_digit && !has_exponent)
+        {
+            has_exponent = true;
+            if (i + 1 < token.size() && (token[i + 1] == '+' || token[i + 1] == '-'))
+            {
+                ++i;
+            }
+            continue;
+        }
+        return false;
+    }
+
+    return has_digit && (has_dot || has_exponent);
+}
+
+/**
+ * @brief Determines whether a lexeme corresponds to a double-quoted string.
+ * @param token Lexeme to evaluate.
+ * @return true if it looks like a string literal; false otherwise.
+ */
+bool is_string_token(const std::string &token)
+{
+    return token.size() >= 2 && token.front() == '"' && token.back() == '"';
+}
+
+/**
+ * @brief Determines whether a lexeme corresponds to a single-quoted character.
+ * @param token Lexeme to evaluate.
+ * @return true if it looks like a char literal; false otherwise.
+ */
+bool is_char_token(const std::string &token)
+{
+    return token.size() >= 3 && token.front() == '\'' && token.back() == '\'';
+}
+
+/**
+ * @brief Finds the first existing terminal among several possible aliases.
+ * @param table Table containing the terminal dictionary.
+ * @param names Candidate aliases.
+ * @return Id of the first terminal found, or -1 if none exists.
+ */
+int find_terminal(const ParseTable &table, std::initializer_list<const char *> names)
+{
+    for (const char *name : names)
+    {
+        auto it = table.terminal_to_id.find(name);
+        if (it != table.terminal_to_id.end())
+        {
+            return it->second;
+        }
+    }
+    return -1;
+}
+
+/**
+ * @brief Builds heuristic rules to recognize identifiers, numbers, and literals.
+ * @param table Parsing table.
+ * @return Classifier ready to tokenize inputs.
+ */
+TokenClassifier build_classifier(const ParseTable &table)
+{
+    TokenClassifier classifier;
+    classifier.identifier_terminal = find_terminal(table, {"IDENTIFIER", "ID", "id"});
+    classifier.integer_terminal = find_terminal(table, {"INT_LITERAL", "INT"});
+    classifier.float_terminal = find_terminal(table, {"FLOAT_LITERAL", "FLOAT"});
+    classifier.generic_number_terminal = find_terminal(table, {"NUM", "num", "NUMBER", "number"});
+    classifier.string_terminal = find_terminal(table, {"STRING_LITERAL", "STRING", "str"});
+    classifier.char_terminal = find_terminal(table, {"CHAR_LITERAL", "CHAR", "char_lit"});
+
+    for (int terminal = 0; terminal < table.num_terminals_with_eof; ++terminal)
+    {
+        if (table.terminals[terminal] == "$")
+        {
+            continue;
+        }
+        if (terminal == classifier.identifier_terminal ||
+            terminal == classifier.integer_terminal ||
+            terminal == classifier.float_terminal ||
+            terminal == classifier.generic_number_terminal ||
+            terminal == classifier.string_terminal ||
+            terminal == classifier.char_terminal)
+        {
+            continue;
+        }
+        classifier.literal_terminals.push_back(terminal);
+    }
+
+    std::sort(classifier.literal_terminals.begin(),
+              classifier.literal_terminals.end(),
+              [&table](int left, int right)
+              {
+                  return table.terminals[left].size() > table.terminals[right].size();
+              });
+
+    return classifier;
+}
+
+/**
+ * @brief Attempts to map a lexeme to a terminal in the table.
+ * @param token Lexeme to classify.
+ * @param table Parsing table.
+ * @param classifier Helper classifier for aliases and token classes.
+ * @return Terminal id or -1 if there is no match.
+ */
+int classify_token_text(const std::string &token,
+                        const ParseTable &table,
+                        const TokenClassifier &classifier)
+{
+    auto direct = table.terminal_to_id.find(token);
+    if (direct != table.terminal_to_id.end())
+    {
+        return direct->second;
+    }
+    if (is_string_token(token) && classifier.string_terminal >= 0)
+    {
+        return classifier.string_terminal;
+    }
+    if (is_char_token(token) && classifier.char_terminal >= 0)
+    {
+        return classifier.char_terminal;
+    }
+    if (is_float_token(token))
+    {
+        if (classifier.float_terminal >= 0)
+        {
+            return classifier.float_terminal;
+        }
+        if (classifier.generic_number_terminal >= 0)
+        {
+            return classifier.generic_number_terminal;
+        }
+    }
+    if (is_integer_token(token))
+    {
+        if (classifier.integer_terminal >= 0)
+        {
+            return classifier.integer_terminal;
+        }
+        if (classifier.generic_number_terminal >= 0)
+        {
+            return classifier.generic_number_terminal;
+        }
+        if (classifier.float_terminal >= 0)
+        {
+            return classifier.float_terminal;
+        }
+    }
+    if (is_identifier_token(token) && classifier.identifier_terminal >= 0)
+    {
+        return classifier.identifier_terminal;
+    }
+    return -1;
+}
+
+// ----- Subsection 5.2: Input string tokenization ------
+
+/**
+ * @brief Checks whether a literal matches at a position without breaking identifier boundaries.
+ * @param text Full input text.
+ * @param position Current scanning position.
+ * @param literal Terminal literal to compare.
+ * @return true if the literal can be consumed at that position; false otherwise.
+ */
+bool matches_literal_boundary(const std::string &text, std::size_t position, const std::string &literal)
+{
+    if (position + literal.size() > text.size())
+    {
+        return false;
+    }
+    if (text.compare(position, literal.size(), literal) != 0)
+    {
+        return false;
+    }
+
+    const bool identifier_like =
+        !literal.empty() &&
+        (std::isalpha(static_cast<unsigned char>(literal.front())) != 0 || literal.front() == '_');
+    if (!identifier_like)
+    {
+        return true;
+    }
+
+    const std::size_t end = position + literal.size();
+    if (end < text.size())
+    {
+        const char next = text[end];
+        if (std::isalnum(static_cast<unsigned char>(next)) != 0 || next == '_')
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * @brief Tokenizes one single line from the input file.
+ * @param line Original string.
+ * @param table Parsing table.
+ * @param classifier Helper classifier.
+ * @return Tokenized input sequence terminated with '$'.
+ * @throws std::runtime_error If the full line cannot be tokenized.
+ */
+InputSequence tokenize_line(const std::string &line,
+                            const ParseTable &table,
+                            const TokenClassifier &classifier)
+{
+    InputSequence sequence;
+    sequence.original_text = line;
+
+    const std::string stripped = trim(line);
+    if (stripped.empty())
+    {
+        return sequence;
+    }
+
+    bool whitespace_ok = true;
+    for (const std::string &token : split_whitespace(stripped))
+    {
+        const int terminal = classify_token_text(token, table, classifier);
+        if (terminal < 0)
+        {
+            whitespace_ok = false;
+            break;
+        }
+        sequence.tokens.push_back(terminal);
+    }
+
+    if (!whitespace_ok || sequence.tokens.empty())
+    {
+        sequence.tokens.clear();
+
+        std::size_t position = 0;
+        while (position < stripped.size())
+        {
+            if (std::isspace(static_cast<unsigned char>(stripped[position])) != 0)
+            {
+                ++position;
+                continue;
+            }
+
+            bool matched_literal = false;
+            for (int terminal : classifier.literal_terminals)
+            {
+                const std::string &literal = table.terminals[terminal];
+                if (!matches_literal_boundary(stripped, position, literal))
+                {
+                    continue;
+                }
+                sequence.tokens.push_back(terminal);
+                position += literal.size();
+                matched_literal = true;
+                break;
+            }
+            if (matched_literal)
+            {
+                continue;
+            }
+
+            const auto scan_quoted = [&](char quote, int terminal_id) -> bool
+            {
+                if (stripped[position] != quote)
+                {
+                    return false;
+                }
+
+                std::size_t end = position + 1;
+                bool escaped = false;
+                while (end < stripped.size())
+                {
+                    const char current = stripped[end];
+                    if (!escaped && current == quote)
+                    {
+                        break;
+                    }
+                    escaped = (!escaped && current == '\\');
+                    if (escaped && current != '\\')
+                    {
+                        escaped = false;
+                    }
+                    ++end;
+                }
+
+                if (end >= stripped.size() || terminal_id < 0)
+                {
+                    throw std::runtime_error("Could not tokenize input string: " + stripped);
+                }
+
+                sequence.tokens.push_back(terminal_id);
+                position = end + 1;
+                return true;
+            };
+
+            if (scan_quoted('"', classifier.string_terminal) || scan_quoted('\'', classifier.char_terminal))
+            {
+                continue;
+            }
+
+            std::size_t end = position;
+            while (end < stripped.size() && std::isspace(static_cast<unsigned char>(stripped[end])) == 0)
+            {
+                ++end;
+            }
+
+            bool matched_dynamic = false;
+            while (end > position)
+            {
+                const std::string candidate = stripped.substr(position, end - position);
+                const int terminal = classify_token_text(candidate, table, classifier);
+                if (terminal >= 0)
+                {
+                    sequence.tokens.push_back(terminal);
+                    position = end;
+                    matched_dynamic = true;
+                    break;
+                }
+                --end;
+            }
+
+            if (!matched_dynamic)
+            {
+                throw std::runtime_error("Could not tokenize input string: " + stripped);
+            }
+        }
+    }
+
+    if (!sequence.tokens.empty() && sequence.tokens.back() != table.eof_terminal)
+    {
+        sequence.tokens.push_back(table.eof_terminal);
+    }
+
+    return sequence;
+}
+
+/**
+ * @brief Loads and tokenizes all strings from the input file.
+ * @param path Path to the input file.
+ * @param table Parsing table.
+ * @return List of tokenized input strings.
+ */
+std::vector<InputSequence> load_inputs(const std::string &path, const ParseTable &table)
+{
+    const std::string content = read_file(path);
+    const TokenClassifier classifier = build_classifier(table);
+
+    std::vector<InputSequence> inputs;
+    std::istringstream stream(content);
+    std::string line;
+    while (std::getline(stream, line))
+    {
+        const std::string stripped = trim(line);
+        if (stripped.empty() || stripped.rfind('#', 0) == 0)
+        {
+            continue;
+        }
+
+        InputSequence sequence = tokenize_line(line, table, classifier);
+        if (!sequence.tokens.empty())
+        {
+            inputs.push_back(std::move(sequence));
+        }
+    }
+
+    return inputs;
+}
+
 } // namespace
