@@ -1,0 +1,9 @@
+Non-terminals: A' A B C
+Terminals: @ & m f t
+A' -> A
+A -> + A B
+A -> +
+B -> C - B
+B -> m A
+C -> f
+C -> t
