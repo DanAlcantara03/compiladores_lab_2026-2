@@ -1,0 +1,5 @@
+Non-terminals: S B
+Terminals: p q ^
+S -> S ^ B
+S -> q
+B -> p
