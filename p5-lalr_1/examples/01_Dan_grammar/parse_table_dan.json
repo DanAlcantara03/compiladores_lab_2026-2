@@ -1,0 +1,35 @@
+{
+  "numStates": 11,
+  "numTerminalsWithEof": 6,
+  "numNonTerminals": 3,
+  "hasConflicts": false,
+  "numConflicts": 0,
+  "terminals": ["+", "-", "m", "f", "t", "$"],
+  "nonTerminals": ["A", "B", "C"],
+  "action": [
+    [{"type":"SHIFT","value":1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}],
+    [{"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"SHIFT","value":3}, {"type":"SHIFT","value":4}, {"type":"SHIFT","value":5}, {"type":"REDUCE","value":1}],
+    [{"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ACCEPT","value":0}],
+    [{"type":"REDUCE","value":3}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}],
+    [{"type":"ERROR","value":-1}, {"type":"REDUCE","value":4}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}],
+    [{"type":"ERROR","value":-1}, {"type":"REDUCE","value":5}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}],
+    [{"type":"SHIFT","value":1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}],
+    [{"type":"ERROR","value":-1}, {"type":"SHIFT","value":9}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}],
+    [{"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"REDUCE","value":0}],
+    [{"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"SHIFT","value":3}, {"type":"SHIFT","value":4}, {"type":"SHIFT","value":5}, {"type":"ERROR","value":-1}],
+    [{"type":"REDUCE","value":2}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}]
+  ],
+  "goto": [
+    [2, -1, -1],
+    [-1, 6, 7],
+    [-1, -1, -1],
+    [-1, -1, -1],
+    [-1, -1, -1],
+    [-1, -1, -1],
+    [8, -1, -1],
+    [-1, -1, -1],
+    [-1, -1, -1],
+    [-1, 10, 7],
+    [-1, -1, -1]
+  ]
+}
