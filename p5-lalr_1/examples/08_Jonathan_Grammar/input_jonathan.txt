@@ -1,0 +1,8 @@
+# Cadenas Correctas
+a b
+a a b
+a a a a b
+# Cadenas Incorrectas
+a
+a b a
+a a a a
