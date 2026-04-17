@@ -917,4 +917,203 @@ std::vector<InputSequence> load_inputs(const std::string &path, const ParseTable
     return inputs;
 }
 
+// ==== Section 6: Formatting Symbols and Rules =====
+// ----- Text conversion for the trace ------
+
+/**
+ * @brief Converts an internal symbol id to its textual representation.
+ * @param table Table containing symbol names.
+ * @param symbol_id Terminal or non-terminal id.
+ * @return Textual symbol name.
+ */
+std::string symbol_name(const ParseTable &table, int symbol_id)
+{
+    if (symbol_id >= 0 && symbol_id < table.num_terminals_with_eof)
+    {
+        return table.terminals[symbol_id];
+    }
+
+    const int non_terminal = symbol_id - table.num_terminals_with_eof;
+    if (non_terminal >= 0 && non_terminal < table.num_non_terminals)
+    {
+        return table.non_terminals[non_terminal];
+    }
+    return "?";
+}
+
+/**
+ * @brief Converts a production to the format "pN: A -> beta".
+ * @param table Table containing symbol names.
+ * @param rule_index Production index.
+ * @param rule Production to print.
+ * @return Rule in a human-readable trace format.
+ */
+std::string rule_to_string(const ParseTable &table, int rule_index, const Rule &rule)
+{
+    std::ostringstream output;
+    output << "p" << rule_index << ": " << table.non_terminals[rule.lhs] << " ->";
+    if (rule.rhs.empty())
+    {
+        output << " ε";
+    }
+    else
+    {
+        for (int symbol : rule.rhs)
+        {
+            output << ' ' << symbol_name(table, symbol);
+        }
+    }
+    return output.str();
+}
+
+/**
+ * @brief Converts the parser stack into a readable string.
+ * @param table Table containing symbol names.
+ * @param states State stack.
+ * @param symbols Symbol stack interleaved between states.
+ * @return Textual representation of the stack.
+ */
+std::string stack_to_string(const ParseTable &table,
+                            const std::vector<int> &states,
+                            const std::vector<int> &symbols)
+{
+    std::ostringstream output;
+    for (std::size_t i = 0; i < states.size(); ++i)
+    {
+        if (i > 0)
+        {
+            output << ' ' << symbol_name(table, symbols[i - 1]) << ' ';
+        }
+        output << states[i];
+    }
+    return output.str();
+}
+
+// ==== Section 7: Parsing Engine =====
+// ----- Shift-reduce simulation ------
+
+/**
+ * @brief Runs the LALR(1) parser on an already tokenized input.
+ * @param table ACTION/GOTO table.
+ * @param grammar Grammar with productions in order.
+ * @param sequence Tokenized input string.
+ * @return Parsing result together with its tabular trace.
+ */
+ParseResult parse_sequence(const ParseTable &table,
+                           const Grammar &grammar,
+                           const InputSequence &sequence)
+{
+    ParseResult result;
+    std::vector<int> states = {0};
+    std::vector<int> symbols;
+    std::size_t input_position = 0;
+    const int step_limit = 1 + static_cast<int>(sequence.tokens.size()) * 8 + static_cast<int>(grammar.productions.size()) * 4;
+
+    for (int step = 1; step <= step_limit; ++step)
+    {
+        if (input_position >= sequence.tokens.size())
+        {
+            result.message = "Input ended without reaching ACCEPT.";
+            return result;
+        }
+
+        const int state = states.back();
+        const int lookahead = sequence.tokens[input_position];
+        const Action &action = table.action[state][lookahead];
+
+        TraceRow row;
+        row.step = std::to_string(step);
+        row.stack = stack_to_string(table, states, symbols);
+        row.token = table.terminals[lookahead];
+
+        if (action.type == ActionType::Shift)
+        {
+            row.action = "SHIFT " + std::to_string(action.value);
+            row.rule = "-";
+            result.rows.push_back(row);
+
+            symbols.push_back(lookahead);
+            states.push_back(action.value);
+            ++input_position;
+            continue;
+        }
+
+        if (action.type == ActionType::Reduce)
+        {
+            row.action = "REDUCE " + std::to_string(action.value);
+
+            if (action.value < 0 || action.value >= static_cast<int>(grammar.productions.size()))
+            {
+                row.rule = "-";
+                result.rows.push_back(row);
+                result.message = "Reduction p" + std::to_string(action.value) + " does not exist in the grammar.";
+                return result;
+            }
+
+            const Rule &rule = grammar.productions[action.value];
+            row.rule = rule_to_string(table, action.value, rule);
+            result.rows.push_back(row);
+
+            if (rule.rhs.size() > symbols.size())
+            {
+                result.message = "The stack does not contain enough symbols for the reduction.";
+                return result;
+            }
+
+            for (std::size_t i = 0; i < rule.rhs.size(); ++i)
+            {
+                const int expected = rule.rhs[rule.rhs.size() - 1 - i];
+                const int found = symbols.back();
+                if (expected != found)
+                {
+                    std::ostringstream error;
+                    error << "Inconsistent reduction in p" << action.value
+                          << ": expected '" << symbol_name(table, expected)
+                          << "' but found '" << symbol_name(table, found) << "'.";
+                    result.message = error.str();
+                    return result;
+                }
+                symbols.pop_back();
+                states.pop_back();
+            }
+
+            const int goto_state = table.goto_table[states.back()][rule.lhs];
+            if (goto_state < 0)
+            {
+                std::ostringstream error;
+                error << "GOTO[" << states.back() << ", " << table.non_terminals[rule.lhs] << "] does not exist.";
+                result.message = error.str();
+                return result;
+            }
+
+            symbols.push_back(table.num_terminals_with_eof + rule.lhs);
+            states.push_back(goto_state);
+            continue;
+        }
+
+        if (action.type == ActionType::Accept)
+        {
+            row.action = "ACCEPT";
+            row.rule = "-";
+            result.rows.push_back(row);
+            result.accepted = true;
+            result.message = "Input accepted.";
+            return result;
+        }
+
+        row.action = "ERROR";
+        row.rule = "-";
+        result.rows.push_back(row);
+
+        std::ostringstream error;
+        error << "Syntax error in state " << state
+              << " with lookahead '" << table.terminals[lookahead] << "'.";
+        result.message = error.str();
+        return result;
+    }
+
+    result.message = "The trace step limit was reached.";
+    return result;
+}
+
 } // namespace
