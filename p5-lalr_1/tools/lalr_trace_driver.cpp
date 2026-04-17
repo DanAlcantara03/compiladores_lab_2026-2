@@ -245,4 +245,100 @@ int max_reduce_index(const ParseTable &table)
     return max_index;
 }
 
-} //namespace
+// ==== Section 3: Loading parse_table.json =====
+// ----- Reading the ACTION/GOTO table ------
+
+/**
+ * @brief Loads and validates the LALR(1) table from parse_table.json.
+ * @param path Path to the JSON table file.
+ * @return Fully initialized ParseTable structure.
+ * @throws std::runtime_error If the file is inconsistent or invalid.
+ */
+ParseTable load_parse_table(const std::string &path)
+{
+    const json root = json::parse(read_file(path));
+
+    ParseTable table;
+    table.num_states = root.at("numStates").get<int>();
+    table.num_terminals_with_eof = root.at("numTerminalsWithEof").get<int>();
+    table.num_non_terminals = root.at("numNonTerminals").get<int>();
+    table.terminals = root.at("terminals").get<std::vector<std::string>>();
+    table.non_terminals = root.at("nonTerminals").get<std::vector<std::string>>();
+
+    if (static_cast<int>(table.terminals.size()) != table.num_terminals_with_eof)
+    {
+        throw std::runtime_error("The number of terminals does not match numTerminalsWithEof.");
+    }
+    if (static_cast<int>(table.non_terminals.size()) != table.num_non_terminals)
+    {
+        throw std::runtime_error("The number of non-terminals does not match numNonTerminals.");
+    }
+
+    for (int i = 0; i < static_cast<int>(table.terminals.size()); ++i)
+    {
+        table.terminal_to_id.emplace(table.terminals[i], i);
+        if (table.terminals[i] == "$")
+        {
+            table.eof_terminal = i;
+        }
+    }
+    for (int i = 0; i < static_cast<int>(table.non_terminals.size()); ++i)
+    {
+        table.non_terminal_to_id.emplace(table.non_terminals[i], i);
+    }
+
+    if (table.eof_terminal < 0)
+    {
+        throw std::runtime_error("The JSON table does not contain the '$' terminal.");
+    }
+
+    const json &action_rows = root.at("action");
+    const json &goto_rows = root.at("goto");
+    if (static_cast<int>(action_rows.size()) != table.num_states)
+    {
+        throw std::runtime_error("The number of rows in action does not match numStates.");
+    }
+    if (static_cast<int>(goto_rows.size()) != table.num_states)
+    {
+        throw std::runtime_error("The number of rows in goto does not match numStates.");
+    }
+
+    table.action.resize(table.num_states);
+    for (int state = 0; state < table.num_states; ++state)
+    {
+        const json &row = action_rows.at(state);
+        if (static_cast<int>(row.size()) != table.num_terminals_with_eof)
+        {
+            throw std::runtime_error("An action row has an invalid size.");
+        }
+
+        table.action[state].resize(table.num_terminals_with_eof);
+        for (int column = 0; column < table.num_terminals_with_eof; ++column)
+        {
+            const json &entry = row.at(column);
+            table.action[state][column] = Action{
+                parse_action_type(entry.at("type").get<std::string>()),
+                entry.at("value").get<int>()};
+        }
+    }
+
+    table.goto_table.resize(table.num_states);
+    for (int state = 0; state < table.num_states; ++state)
+    {
+        const json &row = goto_rows.at(state);
+        if (static_cast<int>(row.size()) != table.num_non_terminals)
+        {
+            throw std::runtime_error("A goto row has an invalid size.");
+        }
+
+        table.goto_table[state].resize(table.num_non_terminals);
+        for (int column = 0; column < table.num_non_terminals; ++column)
+        {
+            table.goto_table[state][column] = row.at(column).get<int>();
+        }
+    }
+
+    return table;
+}
+
+} // namespace
