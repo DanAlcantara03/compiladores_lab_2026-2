@@ -1,0 +1,25 @@
+{
+  "numStates": 6,
+  "numTerminalsWithEof": 3,
+  "numNonTerminals": 2,
+  "hasConflicts": false,
+  "numConflicts": 0,
+  "terminals": ["*", "id", "$"],
+  "nonTerminals": ["P", "R"],
+  "action": [
+    [{"type":"ERROR","value":-1}, {"type":"SHIFT","value":1}, {"type":"ERROR","value":-1}],
+    [{"type":"REDUCE","value":2}, {"type":"ERROR","value":-1}, {"type":"REDUCE","value":2}],
+    [{"type":"SHIFT","value":4}, {"type":"ERROR","value":-1}, {"type":"ACCEPT","value":0}],
+    [{"type":"REDUCE","value":1}, {"type":"ERROR","value":-1}, {"type":"REDUCE","value":1}],
+    [{"type":"ERROR","value":-1}, {"type":"SHIFT","value":1}, {"type":"ERROR","value":-1}],
+    [{"type":"REDUCE","value":0}, {"type":"ERROR","value":-1}, {"type":"REDUCE","value":0}]
+  ],
+  "goto": [
+    [2, 3],
+    [-1, -1],
+    [-1, -1],
+    [-1, -1],
+    [-1, 5],
+    [-1, -1]
+  ]
+}
