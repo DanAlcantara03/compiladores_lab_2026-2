@@ -1,0 +1,8 @@
+Non-terminals: A B C
+Terminals: + - m f t
+A -> + B A
+A -> +
+B -> C - B
+B -> m
+C -> f
+C -> t

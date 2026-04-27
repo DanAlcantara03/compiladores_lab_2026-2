@@ -1,0 +1,5 @@
+Non-terminals: S C
+Terminals: c d
+S -> C C
+C -> c C
+C -> d

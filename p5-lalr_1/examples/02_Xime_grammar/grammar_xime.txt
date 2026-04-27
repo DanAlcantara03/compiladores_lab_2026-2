@@ -1,0 +1,6 @@
+Non-terminals: B U N
+Terminals: bunny bun ny
+B -> bunny U
+B -> N
+U -> bun B
+N -> ny

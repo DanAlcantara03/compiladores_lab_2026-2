@@ -1,0 +1,91 @@
+Loaded rules:
+  p0: B -> bunny U
+  p1: B -> N
+  p2: U -> bun B
+  p3: N -> ny
+
+Input 1: bunny bun ny
++------+----------------------+-------+----------+------------------+
+| Step | Stack                | Token | Action   | Rule             |
++------+----------------------+-------+----------+------------------+
+| 1    | 0                    | bunny | SHIFT 1  | -                |
+| 2    | 0 bunny 1            | bun   | SHIFT 5  | -                |
+| 3    | 0 bunny 1 bun 5      | ny    | SHIFT 2  | -                |
+| 4    | 0 bunny 1 bun 5 ny 2 | $     | REDUCE 3 | p3: N -> ny      |
+| 5    | 0 bunny 1 bun 5 N 4  | $     | REDUCE 1 | p1: B -> N       |
+| 6    | 0 bunny 1 bun 5 B 7  | $     | REDUCE 2 | p2: U -> bun B   |
+| 7    | 0 bunny 1 U 6        | $     | REDUCE 0 | p0: B -> bunny U |
+| 8    | 0 B 3                | $     | ACCEPT   | -                |
++------+----------------------+-------+----------+------------------+
+Input accepted.
+
+Input 2: bunny bun bunny bun ny
++------+------------------------------------+-------+----------+------------------+
+| Step | Stack                              | Token | Action   | Rule             |
++------+------------------------------------+-------+----------+------------------+
+| 1    | 0                                  | bunny | SHIFT 1  | -                |
+| 2    | 0 bunny 1                          | bun   | SHIFT 5  | -                |
+| 3    | 0 bunny 1 bun 5                    | bunny | SHIFT 1  | -                |
+| 4    | 0 bunny 1 bun 5 bunny 1            | bun   | SHIFT 5  | -                |
+| 5    | 0 bunny 1 bun 5 bunny 1 bun 5      | ny    | SHIFT 2  | -                |
+| 6    | 0 bunny 1 bun 5 bunny 1 bun 5 ny 2 | $     | REDUCE 3 | p3: N -> ny      |
+| 7    | 0 bunny 1 bun 5 bunny 1 bun 5 N 4  | $     | REDUCE 1 | p1: B -> N       |
+| 8    | 0 bunny 1 bun 5 bunny 1 bun 5 B 7  | $     | REDUCE 2 | p2: U -> bun B   |
+| 9    | 0 bunny 1 bun 5 bunny 1 U 6        | $     | REDUCE 0 | p0: B -> bunny U |
+| 10   | 0 bunny 1 bun 5 B 7                | $     | REDUCE 2 | p2: U -> bun B   |
+| 11   | 0 bunny 1 U 6                      | $     | REDUCE 0 | p0: B -> bunny U |
+| 12   | 0 B 3                              | $     | ACCEPT   | -                |
++------+------------------------------------+-------+----------+------------------+
+Input accepted.
+
+Input 3: bunny bun bunny bun bunny bun ny
++------+--------------------------------------------------+-------+----------+------------------+
+| Step | Stack                                            | Token | Action   | Rule             |
++------+--------------------------------------------------+-------+----------+------------------+
+| 1    | 0                                                | bunny | SHIFT 1  | -                |
+| 2    | 0 bunny 1                                        | bun   | SHIFT 5  | -                |
+| 3    | 0 bunny 1 bun 5                                  | bunny | SHIFT 1  | -                |
+| 4    | 0 bunny 1 bun 5 bunny 1                          | bun   | SHIFT 5  | -                |
+| 5    | 0 bunny 1 bun 5 bunny 1 bun 5                    | bunny | SHIFT 1  | -                |
+| 6    | 0 bunny 1 bun 5 bunny 1 bun 5 bunny 1            | bun   | SHIFT 5  | -                |
+| 7    | 0 bunny 1 bun 5 bunny 1 bun 5 bunny 1 bun 5      | ny    | SHIFT 2  | -                |
+| 8    | 0 bunny 1 bun 5 bunny 1 bun 5 bunny 1 bun 5 ny 2 | $     | REDUCE 3 | p3: N -> ny      |
+| 9    | 0 bunny 1 bun 5 bunny 1 bun 5 bunny 1 bun 5 N 4  | $     | REDUCE 1 | p1: B -> N       |
+| 10   | 0 bunny 1 bun 5 bunny 1 bun 5 bunny 1 bun 5 B 7  | $     | REDUCE 2 | p2: U -> bun B   |
+| 11   | 0 bunny 1 bun 5 bunny 1 bun 5 bunny 1 U 6        | $     | REDUCE 0 | p0: B -> bunny U |
+| 12   | 0 bunny 1 bun 5 bunny 1 bun 5 B 7                | $     | REDUCE 2 | p2: U -> bun B   |
+| 13   | 0 bunny 1 bun 5 bunny 1 U 6                      | $     | REDUCE 0 | p0: B -> bunny U |
+| 14   | 0 bunny 1 bun 5 B 7                              | $     | REDUCE 2 | p2: U -> bun B   |
+| 15   | 0 bunny 1 U 6                                    | $     | REDUCE 0 | p0: B -> bunny U |
+| 16   | 0 B 3                                            | $     | ACCEPT   | -                |
++------+--------------------------------------------------+-------+----------+------------------+
+Input accepted.
+
+Input 4: bunny ny ny
++------+-----------+-------+---------+------+
+| Step | Stack     | Token | Action  | Rule |
++------+-----------+-------+---------+------+
+| 1    | 0         | bunny | SHIFT 1 | -    |
+| 2    | 0 bunny 1 | ny    | ERROR   | -    |
++------+-----------+-------+---------+------+
+Syntax error in state 1 with lookahead 'ny'.
+
+Input 5: bun bunny bun ny
++------+-------+-------+--------+------+
+| Step | Stack | Token | Action | Rule |
++------+-------+-------+--------+------+
+| 1    | 0     | bun   | ERROR  | -    |
++------+-------+-------+--------+------+
+Syntax error in state 0 with lookahead 'bun'.
+
+Input 6: bunny bun bunny ny
++------+-------------------------+-------+---------+------+
+| Step | Stack                   | Token | Action  | Rule |
++------+-------------------------+-------+---------+------+
+| 1    | 0                       | bunny | SHIFT 1 | -    |
+| 2    | 0 bunny 1               | bun   | SHIFT 5 | -    |
+| 3    | 0 bunny 1 bun 5         | bunny | SHIFT 1 | -    |
+| 4    | 0 bunny 1 bun 5 bunny 1 | ny    | ERROR   | -    |
++------+-------------------------+-------+---------+------+
+Syntax error in state 1 with lookahead 'ny'.
+

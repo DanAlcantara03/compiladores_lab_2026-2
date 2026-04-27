@@ -1,0 +1,5 @@
+Non-terminals: P R
+Terminals: * id
+P -> P * R
+P -> R
+R -> id

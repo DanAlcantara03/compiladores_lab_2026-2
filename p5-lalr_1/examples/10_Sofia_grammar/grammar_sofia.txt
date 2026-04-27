@@ -1,0 +1,6 @@
+Non-terminals: E T
+Terminals: + ( ) a
+E -> E + T
+E -> T
+T -> ( E ) 
+T -> a

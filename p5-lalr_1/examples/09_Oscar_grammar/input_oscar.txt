@@ -1,0 +1,8 @@
+# Cadenas Correctas
+id
+id * id
+id * id * id
+# Cadenas Incorrectas
+* id
+id *
+id id

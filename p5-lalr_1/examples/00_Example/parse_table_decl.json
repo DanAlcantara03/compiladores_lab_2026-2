@@ -1,0 +1,29 @@
+{
+  "numStates": 8,
+  "numTerminalsWithEof": 5,
+  "numNonTerminals": 3,
+  "hasConflicts": false,
+  "numConflicts": 0,
+  "terminals": ["int", "float", "ID", ";", "$"],
+  "nonTerminals": ["S", "Decl", "Type"],
+  "action": [
+    [{"type":"SHIFT","value":1}, {"type":"SHIFT","value":2}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}],
+    [{"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"REDUCE","value":2}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}],
+    [{"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"REDUCE","value":3}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}],
+    [{"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ACCEPT","value":0}],
+    [{"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"REDUCE","value":0}],
+    [{"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"SHIFT","value":6}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}],
+    [{"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"SHIFT","value":7}, {"type":"ERROR","value":-1}],
+    [{"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"ERROR","value":-1}, {"type":"REDUCE","value":1}]
+  ],
+  "goto": [
+    [3, 4, 5],
+    [-1, -1, -1],
+    [-1, -1, -1],
+    [-1, -1, -1],
+    [-1, -1, -1],
+    [-1, -1, -1],
+    [-1, -1, -1],
+    [-1, -1, -1]
+  ]
+}

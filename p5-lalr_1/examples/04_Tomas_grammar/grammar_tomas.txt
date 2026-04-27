@@ -1,0 +1,6 @@
+Non-terminals: S T
+Terminals: + a b
+S -> S + T
+S -> T
+T -> a
+T -> b

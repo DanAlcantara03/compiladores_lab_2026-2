@@ -1,0 +1,6 @@
+Non-terminals: S Decl Type
+Terminals: int float ID ;
+S -> Decl
+Decl -> Type ID ;
+Type -> int
+Type -> float

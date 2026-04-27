@@ -1,0 +1,5 @@
+Non-terminals: S
+Terminals: + * a
+S -> S S +
+S -> S S *
+S -> a
