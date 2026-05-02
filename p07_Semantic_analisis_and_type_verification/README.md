@@ -12,6 +12,7 @@ fn sum(int a, int b) -> int:
 
 int x = 3
 y = 4
+var inferred = x + 2.5
 
 if x < y:
     y = y + 1
@@ -33,7 +34,7 @@ for i in 0..10:
 | --- | --- |
 | Control flow | `if`, `elif`, `else`, `wh`, `for`, `in` |
 | Functions | `fn`, `ret`, `->` |
-| Types | `int`, `float`, `str`, `bool` |
+| Types | `int`, `float`, `str`, `bool`, `var` |
 | Booleans | `T`, `F` |
 | Arithmetic | `+`, `-`, `*`, `/`, `%` |
 | Comparison | `==`, `!=`, `<`, `<=`, `>`, `>=` |
@@ -48,6 +49,7 @@ Numeric literals do not allow leading zeroes. Valid examples include `0`, `7`, `
 ## Semantics
 
 - Variables can be explicitly typed: `int x = 3`.
+- Variables can be explicitly inferred with `var x = expression`.
 - Variables can be inferred on first assignment: `x = 3`.
 - Reassignments must preserve type compatibility.
 - `int` can be assigned to `float`, but incompatible assignments fail.
@@ -60,6 +62,7 @@ Numeric literals do not allow leading zeroes. Valid examples include `0`, `7`, `
 - Functions must be declared before use.
 - Function arguments are checked by count and type.
 - `ret` must match the declared function return type.
+- Variables and parameters that are declared but never read emit warnings without changing the success exit code.
 
 ## Build
 
@@ -95,6 +98,13 @@ Optional DOT export:
 dot -Tpng ast.dot -o ast.png
 ```
 
+Optional Docker run:
+
+```bash
+docker build -t p07-validator .
+docker run --rm -i p07-validator < tests/valid_basic.summ
+```
+
 ## Tests
 
 Run the complete suite:
@@ -110,6 +120,8 @@ Included valid cases:
 - `tests/valid_functions.summ`
 - `tests/valid_for_range.summ`
 - `tests/valid_shadowing.summ`
+- `tests/valid_var_inference.summ`
+- `tests/valid_warnings_clean.summ`
 - `tests/valid_zero_literals.summ`
 
 Included invalid cases:
@@ -122,9 +134,19 @@ Included invalid cases:
 - `tests/invalid_type_assignment.summ`
 - `tests/invalid_condition_type.summ`
 - `tests/invalid_function_args.summ`
+- `tests/invalid_var_inference_error.summ`
 - `tests/invalid_ret_type.summ`
 - `tests/invalid_leading_zero_int.summ`
 - `tests/invalid_leading_zero_float.summ`
+
+Included warning cases:
+
+- `tests/warning_unused_local.summ`
+- `tests/warning_unused_parameter.summ`
+
+## Optional Extra Work
+
+Implemented optional extra-point items are documented in [`EXTRA_IMPLEMENTATION_TODO.md`](EXTRA_IMPLEMENTATION_TODO.md).
 
 ## Implementation Notes
 
