@@ -1,4 +1,0 @@
-int total = 0
-for i in 0..10:
-    total = total + i
-bool ok = total >= 0

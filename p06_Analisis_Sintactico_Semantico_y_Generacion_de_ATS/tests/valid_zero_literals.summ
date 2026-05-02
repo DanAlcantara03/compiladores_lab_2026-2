@@ -1,4 +1,0 @@
-int zero = 0
-float ratio = 0.5
-for i in 0..3:
-    zero = zero + i
