@@ -100,11 +100,16 @@ static ASTNode *make_function_node(const char *name, ParamList *params, const ch
                                    ASTNode *block, YYLTYPE loc);
 static ExprValue *make_call_expr(const char *name, ArgList *args, YYLTYPE loc);
 static ASTNode *make_return_node(ExprValue *expr, YYLTYPE loc);
+static void syntax_error_expected_at(YYLTYPE loc, const char *expected, const char *got);
+static const char *friendly_token_name(const char *token);
+static void copy_message_token(const char *start, size_t length, char *target, size_t target_size);
+static void print_expected_tokens(FILE *stream, const char *expected);
 static void print_success_output(void);
 static void cleanup_parser_state(void);
 %}
 
 %define parse.error detailed
+%define parse.lac full
 %locations
 
 %union {
@@ -178,6 +183,13 @@ function_decl:
         params_free($4);
         free_text($2);
         free_text($7);
+    }
+    | FN ID LPAREN params RPAREN ARROW type NEWLINE {
+        syntax_error_expected_at(@8, "':'", "'newline'");
+        params_free($4);
+        free_text($2);
+        free_text($7);
+        YYABORT;
     }
     ;
 
@@ -287,6 +299,11 @@ if_statement:
         ast_add_child($$, $6);
         expr_release($2);
     }
+    | IF expression NEWLINE {
+        syntax_error_expected_at(@3, "':'", "'newline'");
+        expr_release($2);
+        YYABORT;
+    }
     ;
 
 elif_list:
@@ -304,6 +321,12 @@ elif_list:
         $$ = $1;
         expr_release($3);
     }
+    | elif_list ELIF expression NEWLINE {
+        syntax_error_expected_at(@4, "':'", "'newline'");
+        ast_free($1);
+        expr_release($3);
+        YYABORT;
+    }
     ;
 
 else_clause:
@@ -311,6 +334,10 @@ else_clause:
     | ELSE COLON block {
         $$ = ast_new("Else", NULL, @1.first_line, @1.first_column);
         ast_add_child($$, $3);
+    }
+    | ELSE NEWLINE {
+        syntax_error_expected_at(@2, "':'", "'newline'");
+        YYABORT;
     }
     ;
 
@@ -323,6 +350,11 @@ while_statement:
         ast_add_child($$, $2->node);
         ast_add_child($$, $4);
         expr_release($2);
+    }
+    | WH expression NEWLINE {
+        syntax_error_expected_at(@3, "':'", "'newline'");
+        expr_release($2);
+        YYABORT;
     }
     ;
 
@@ -356,6 +388,13 @@ for_statement:
         free_text($2);
         expr_release($4);
         expr_release($6);
+    }
+    | FOR ID IN expression RANGE expression NEWLINE {
+        syntax_error_expected_at(@7, "':'", "'newline'");
+        free_text($2);
+        expr_release($4);
+        expr_release($6);
+        YYABORT;
     }
     ;
 
@@ -547,9 +586,42 @@ arg_list:
 %%
 
 void yyerror(const char *message) {
+    const char *unexpected;
+    const char *expecting;
+    char got[64];
+
     if (lexer_error_count > 0) {
         return;
     }
+
+    unexpected = strstr(message, "unexpected ");
+    expecting = strstr(message, ", expecting ");
+    if (unexpected) {
+        const char *got_start = unexpected + strlen("unexpected ");
+        const char *got_end = strchr(got_start, ',');
+        if (!got_end) {
+            got_end = got_start + strlen(got_start);
+        }
+        copy_message_token(got_start, (size_t)(got_end - got_start), got, sizeof(got));
+
+        if (expecting) {
+            fprintf(stderr, "syntax error: expected ");
+            print_expected_tokens(stderr, expecting + strlen(", expecting "));
+            fprintf(stderr, " but got %s at line %d, column %d\n",
+                    friendly_token_name(got), yylloc.first_line, yylloc.first_column);
+        } else {
+            fprintf(stderr, "syntax error: unexpected %s at line %d, column %d\n",
+                    friendly_token_name(got), yylloc.first_line, yylloc.first_column);
+        }
+        return;
+    }
+
+    if (strncmp(message, "syntax error, ", strlen("syntax error, ")) == 0) {
+        message += strlen("syntax error, ");
+    } else if (strcmp(message, "syntax error") == 0) {
+        message = "invalid syntax";
+    }
+
     fprintf(stderr, "syntax error: %s at line %d, column %d\n",
             message, yylloc.first_line, yylloc.first_column);
 }
@@ -951,6 +1023,104 @@ static ASTNode *make_return_node(ExprValue *expr, YYLTYPE loc) {
     ast_add_child(ret, expr->node);
     ast_set_type(ret, current_return_type ? current_return_type : "error");
     return ret;
+}
+
+static void syntax_error_expected_at(YYLTYPE loc, const char *expected, const char *got) {
+    fprintf(stderr, "syntax error: expected %s but got %s at line %d, column %d\n",
+            expected, got, loc.first_line, loc.first_column);
+}
+
+static const char *friendly_token_name(const char *token) {
+    static const struct {
+        const char *raw;
+        const char *friendly;
+    } token_names[] = {
+        {"ID", "'identifier'"},
+        {"INT_LIT", "'number'"},
+        {"FLOAT_LIT", "'number'"},
+        {"STRING_LIT", "'string'"},
+        {"TRUE", "'T'"},
+        {"FALSE", "'F'"},
+        {"IF", "'if'"},
+        {"ELIF", "'elif'"},
+        {"ELSE", "'else'"},
+        {"WH", "'wh'"},
+        {"FOR", "'for'"},
+        {"IN", "'in'"},
+        {"FN", "'fn'"},
+        {"RET", "'ret'"},
+        {"TYPE_INT", "'int'"},
+        {"TYPE_FLOAT", "'float'"},
+        {"TYPE_STR", "'str'"},
+        {"TYPE_BOOL", "'bool'"},
+        {"INDENT", "'indentation'"},
+        {"DEDENT", "'dedentation'"},
+        {"NEWLINE", "'newline'"},
+        {"PLUS", "'+'"},
+        {"MINUS", "'-'"},
+        {"STAR", "'*'"},
+        {"SLASH", "'/'"},
+        {"MOD", "'%'"},
+        {"EQ", "'=='"},
+        {"NEQ", "'!='"},
+        {"LT", "'<'"},
+        {"LTE", "'<='"},
+        {"GT", "'>'"},
+        {"GTE", "'>='"},
+        {"AND", "'&'"},
+        {"OR", "'|'"},
+        {"NOT", "'!'"},
+        {"ASSIGN", "'='"},
+        {"RANGE", "'..'"},
+        {"ARROW", "'->'"},
+        {"COLON", "':'"},
+        {"COMMA", "','"},
+        {"LPAREN", "'('"},
+        {"RPAREN", "')'"},
+        {"end of file", "end of file"},
+    };
+
+    if (!token) {
+        return "unknown token";
+    }
+
+    for (size_t i = 0; i < sizeof(token_names) / sizeof(token_names[0]); i++) {
+        if (strcmp(token, token_names[i].raw) == 0) {
+            return token_names[i].friendly;
+        }
+    }
+    return token;
+}
+
+static void copy_message_token(const char *start, size_t length, char *target, size_t target_size) {
+    if (target_size == 0) {
+        return;
+    }
+    if (length >= target_size) {
+        length = target_size - 1;
+    }
+    memcpy(target, start, length);
+    target[length] = '\0';
+}
+
+static void print_expected_tokens(FILE *stream, const char *expected) {
+    const char *cursor = expected;
+    int count = 0;
+
+    while (cursor && *cursor != '\0') {
+        const char *separator = strstr(cursor, " or ");
+        const char *end = separator ? separator : cursor + strlen(cursor);
+        char token[64];
+
+        copy_message_token(cursor, (size_t)(end - cursor), token, sizeof(token));
+        if (count > 0) {
+            fprintf(stream, " or ");
+        }
+        fprintf(stream, "%s", friendly_token_name(token));
+        count++;
+
+        cursor = separator ? separator + strlen(" or ") : NULL;
+    }
 }
 
 static void print_success_output(void) {
