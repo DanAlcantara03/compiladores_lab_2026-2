@@ -1,0 +1,36 @@
+digraph AST {
+  node [shape=box, style=rounded, fontname="Arial"];
+  node0 [label="Program"];
+  node1 [label="VarDecl\nx\n<int>"];
+  node0 -> node1;
+  node2 [label="Type\nint"];
+  node1 -> node2;
+  node3 [label="Literal\n3\n<int>"];
+  node1 -> node3;
+  node4 [label="Assign\ny\n<int>"];
+  node0 -> node4;
+  node5 [label="Literal\n4\n<int>"];
+  node4 -> node5;
+  node6 [label="VarDecl\nz\n<float>"];
+  node0 -> node6;
+  node7 [label="Type\nfloat"];
+  node6 -> node7;
+  node8 [label="BinaryExpr\n+\n<float>"];
+  node6 -> node8;
+  node9 [label="Identifier\nx\n<int>"];
+  node8 -> node9;
+  node10 [label="Literal\n2.5\n<float>"];
+  node8 -> node10;
+  node11 [label="VarDecl\nname\n<str>"];
+  node0 -> node11;
+  node12 [label="Type\nstr"];
+  node11 -> node12;
+  node13 [label="Literal\n\"compact\"\n<str>"];
+  node11 -> node13;
+  node14 [label="VarDecl\nok\n<bool>"];
+  node0 -> node14;
+  node15 [label="Type\nbool"];
+  node14 -> node15;
+  node16 [label="Literal\nT\n<bool>"];
+  node14 -> node16;
+}
