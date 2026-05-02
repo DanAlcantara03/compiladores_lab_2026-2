@@ -46,7 +46,15 @@ ID_CHAR    [A-Za-z0-9_]
                             if (pending_count > 0) return pop_pending_token();
                          }
 <BOL>[^ \t\n#]           {
+                            int line = yylloc.first_line;
+                            int column = yylloc.first_column;
                             yyless(0);
+                            current_line = line;
+                            current_column = column;
+                            yylloc.first_line = line;
+                            yylloc.first_column = column;
+                            yylloc.last_line = line;
+                            yylloc.last_column = column;
                             BEGIN(INITIAL);
                             handle_indent(0);
                             if (pending_count > 0) return pop_pending_token();
