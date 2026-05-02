@@ -93,6 +93,14 @@ int symtab_define(Symbol symbol, int reject_visible) {
     return 1;
 }
 
+Symbol *symtab_lookup_current(const char *name) {
+    if (scope_count == 0 || !name) {
+        return NULL;
+    }
+
+    return scope_lookup(&scopes[scope_count - 1], name);
+}
+
 Symbol *symtab_lookup(const char *name) {
     if (!name) {
         return NULL;
@@ -108,8 +116,16 @@ Symbol *symtab_lookup(const char *name) {
     return NULL;
 }
 
+int symtab_exists_current(const char *name) {
+    return symtab_lookup_current(name) != NULL;
+}
+
 int symtab_exists_visible(const char *name) {
     return symtab_lookup(name) != NULL;
+}
+
+size_t symtab_current_depth(void) {
+    return scope_count == 0 ? 0 : scope_count - 1;
 }
 
 void symtab_free(void) {
@@ -141,8 +157,9 @@ static char *copy_string(const char *text) {
 
 static void symbol_copy(Symbol *destination, const Symbol *source) {
     destination->name = copy_string(source->name);
+    destination->category = source->category;
     destination->type = copy_string(source->type);
-    destination->is_function = source->is_function;
+    destination->depth = scope_count == 0 ? 0 : (int)(scope_count - 1);
     destination->param_count = source->param_count;
     destination->return_type = copy_string(source->return_type);
 
