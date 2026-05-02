@@ -1,0 +1,5 @@
+fn main() -> int:
+    int unused = 1
+    ret 0
+var result = main()
+result

@@ -1,0 +1,4 @@
+fn id(int value) -> int:
+    ret value
+var result = id(1)
+result

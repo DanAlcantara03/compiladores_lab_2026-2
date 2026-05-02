@@ -1,0 +1,4 @@
+fn choose(int used, int unused) -> int:
+    ret used
+var result = choose(1, 2)
+result
