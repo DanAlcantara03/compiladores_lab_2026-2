@@ -373,9 +373,9 @@ for_statement:
             Symbol loop_symbol = {0};
             loop_symbol.name = $2;
             loop_symbol.type = "int";
-            loop_symbol.is_function = 0;
-            if (!symtab_define(loop_symbol, 1)) {
-                semantic_error_at(@2, "variable '%s' is already declared", $2);
+            loop_symbol.category = SYMBOL_VARIABLE;
+            if (!symtab_define(loop_symbol, 0)) {
+                semantic_error_at(@2, "variable '%s' is already declared in this scope", $2);
             }
         }
     } block {
@@ -781,12 +781,12 @@ static ASTNode *make_decl_node(const char *name, const char *decl_type, ExprValu
 
     symbol.name = (char *)name;
     symbol.type = (char *)decl_type;
-    symbol.is_function = 0;
+    symbol.category = SYMBOL_VARIABLE;
 
-    if (symtab_exists_visible(name)) {
-        semantic_error_at(loc, "variable '%s' is already declared", name);
-    } else if (!symtab_define(symbol, 1)) {
-        semantic_error_at(loc, "variable '%s' is already declared", name);
+    if (symtab_exists_current(name)) {
+        semantic_error_at(loc, "variable '%s' is already declared in this scope", name);
+    } else if (!symtab_define(symbol, 0)) {
+        semantic_error_at(loc, "variable '%s' is already declared in this scope", name);
     }
 
     if (!is_assignable_type(decl_type, expr->type)) {
@@ -807,12 +807,12 @@ static ASTNode *make_assign_node(const char *name, ExprValue *expr, YYLTYPE loc)
         Symbol inferred = {0};
         inferred.name = (char *)name;
         inferred.type = expr->type;
-        inferred.is_function = 0;
-        if (!is_error_type(expr->type) && !symtab_define(inferred, 1)) {
-            semantic_error_at(loc, "variable '%s' is already declared", name);
+        inferred.category = SYMBOL_VARIABLE;
+        if (!is_error_type(expr->type) && !symtab_define(inferred, 0)) {
+            semantic_error_at(loc, "variable '%s' is already declared in this scope", name);
         }
         ast_set_type(assign, expr->type);
-    } else if (symbol->is_function) {
+    } else if (symbol->category == SYMBOL_FUNCTION) {
         semantic_error_at(loc, "cannot assign to function '%s'", name);
         ast_set_type(assign, "error");
     } else {
@@ -833,7 +833,7 @@ static ASTNode *make_identifier_expr(const char *name, YYLTYPE loc, char **out_t
     if (!symbol) {
         semantic_error_at(loc, "variable '%s' is not declared", name);
         *out_type = copy_string("error");
-    } else if (symbol->is_function) {
+    } else if (symbol->category == SYMBOL_FUNCTION) {
         semantic_error_at(loc, "function '%s' must be called with parentheses", name);
         *out_type = copy_string("error");
     } else {
@@ -945,13 +945,15 @@ static void define_function_symbol(const char *name, ParamList *params, const ch
 
     symbol.name = (char *)name;
     symbol.type = (char *)return_type;
-    symbol.is_function = 1;
+    symbol.category = SYMBOL_FUNCTION;
     symbol.param_types = param_types;
     symbol.param_count = params->count;
     symbol.return_type = (char *)return_type;
 
-    if (!symtab_define(symbol, 1)) {
-        semantic_error_at(loc, "function '%s' is already declared", name);
+    if (symtab_exists_current(name)) {
+        semantic_error_at(loc, "function '%s' is already declared in this scope", name);
+    } else if (!symtab_define(symbol, 0)) {
+        semantic_error_at(loc, "function '%s' is already declared in this scope", name);
     }
 
     free(param_types);
@@ -964,10 +966,10 @@ static void define_function_params(ParamList *params) {
                        params->items[i].line, params->items[i].column};
         symbol.name = params->items[i].name;
         symbol.type = params->items[i].type;
-        symbol.is_function = 0;
+        symbol.category = SYMBOL_VARIABLE;
 
-        if (!symtab_define(symbol, 1)) {
-            semantic_error_at(loc, "parameter '%s' is already declared", params->items[i].name);
+        if (!symtab_define(symbol, 0)) {
+            semantic_error_at(loc, "parameter '%s' is already declared in this scope", params->items[i].name);
         }
     }
 }
@@ -989,7 +991,7 @@ static ExprValue *make_call_expr(const char *name, ArgList *args, YYLTYPE loc) {
 
     if (!symbol) {
         semantic_error_at(loc, "function '%s' is not declared", name);
-    } else if (!symbol->is_function) {
+    } else if (symbol->category != SYMBOL_FUNCTION) {
         semantic_error_at(loc, "'%s' is not a function", name);
     } else {
         return_type = symbol->return_type;
