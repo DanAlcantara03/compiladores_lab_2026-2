@@ -1150,7 +1150,7 @@ int main(int argc, char **argv) {
         if (strcmp(argv[i], "--dot") == 0 && i + 1 < argc) {
             dot_output_path = argv[++i];
         } else {
-            fprintf(stderr, "usage: %s [--dot ast.dot] < source.lang\n", argv[0]);
+            fprintf(stderr, "usage: %s [--dot ast.dot] < source.summ\n", argv[0]);
             return EXIT_FAILURE;
         }
     }

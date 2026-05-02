@@ -9,24 +9,24 @@ BUILD_DIR = ROOT / "build"
 EXECUTABLE = BUILD_DIR / ("p06_validator.exe" if sys.platform.startswith("win") else "p06_validator")
 
 VALID_TESTS = [
-    "valid_basic.lang",
-    "valid_control.lang",
-    "valid_functions.lang",
-    "valid_for_range.lang",
-    "valid_zero_literals.lang",
+    "valid_basic.summ",
+    "valid_control.summ",
+    "valid_functions.summ",
+    "valid_for_range.summ",
+    "valid_zero_literals.summ",
 ]
 
 INVALID_TESTS = {
-    "invalid_syntax_missing_colon.lang": "syntax error",
-    "invalid_indent.lang": "lexical error",
-    "invalid_undeclared.lang": "semantic error",
-    "invalid_redeclare.lang": "semantic error",
-    "invalid_type_assignment.lang": "semantic error",
-    "invalid_condition_type.lang": "semantic error",
-    "invalid_function_args.lang": "semantic error",
-    "invalid_ret_type.lang": "semantic error",
-    "invalid_leading_zero_int.lang": "lexical error",
-    "invalid_leading_zero_float.lang": "lexical error",
+    "invalid_syntax_missing_colon.summ": "syntax error",
+    "invalid_indent.summ": "lexical error",
+    "invalid_undeclared.summ": "semantic error",
+    "invalid_redeclare.summ": "semantic error",
+    "invalid_type_assignment.summ": "semantic error",
+    "invalid_condition_type.summ": "semantic error",
+    "invalid_function_args.summ": "semantic error",
+    "invalid_ret_type.summ": "semantic error",
+    "invalid_leading_zero_int.summ": "lexical error",
+    "invalid_leading_zero_float.summ": "lexical error",
 }
 
 

@@ -81,7 +81,7 @@ cmake --build build
 The validator reads source code from `stdin`.
 
 ```bash
-./build/p06_validator < tests/valid_functions.lang
+./build/p06_validator < tests/valid_functions.summ
 ```
 
 Successful programs print a readable AST to `stdout`. Lexical, syntax, and semantic errors are printed to `stderr`.
@@ -89,7 +89,7 @@ Successful programs print a readable AST to `stdout`. Lexical, syntax, and seman
 Optional DOT export:
 
 ```bash
-./build/p06_validator --dot ast.dot < tests/valid_functions.lang
+./build/p06_validator --dot ast.dot < tests/valid_functions.summ
 dot -Tpng ast.dot -o ast.png
 ```
 
@@ -103,24 +103,24 @@ python3 tests/run_tests.py
 
 Included valid cases:
 
-- `tests/valid_basic.lang`
-- `tests/valid_control.lang`
-- `tests/valid_functions.lang`
-- `tests/valid_for_range.lang`
-- `tests/valid_zero_literals.lang`
+- `tests/valid_basic.summ`
+- `tests/valid_control.summ`
+- `tests/valid_functions.summ`
+- `tests/valid_for_range.summ`
+- `tests/valid_zero_literals.summ`
 
 Included invalid cases:
 
-- `tests/invalid_syntax_missing_colon.lang`
-- `tests/invalid_indent.lang`
-- `tests/invalid_undeclared.lang`
-- `tests/invalid_redeclare.lang`
-- `tests/invalid_type_assignment.lang`
-- `tests/invalid_condition_type.lang`
-- `tests/invalid_function_args.lang`
-- `tests/invalid_ret_type.lang`
-- `tests/invalid_leading_zero_int.lang`
-- `tests/invalid_leading_zero_float.lang`
+- `tests/invalid_syntax_missing_colon.summ`
+- `tests/invalid_indent.summ`
+- `tests/invalid_undeclared.summ`
+- `tests/invalid_redeclare.summ`
+- `tests/invalid_type_assignment.summ`
+- `tests/invalid_condition_type.summ`
+- `tests/invalid_function_args.summ`
+- `tests/invalid_ret_type.summ`
+- `tests/invalid_leading_zero_int.summ`
+- `tests/invalid_leading_zero_float.summ`
 
 ## Implementation Notes
 
