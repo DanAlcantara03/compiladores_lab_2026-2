@@ -72,6 +72,7 @@ ID_CHAR    [A-Za-z0-9_]
 "in"                     { return IN; }
 "fn"                     { return FN; }
 "ret"                    { return RET; }
+"var"                    { return VAR; }
 
 "int"                    { return TYPE_INT; }
 "float"                  { return TYPE_FLOAT; }

@@ -86,6 +86,7 @@ static char *infer_unary_type(const char *op, const char *operand, YYLTYPE loc);
 static void semantic_error_at(YYLTYPE loc, const char *format, ...);
 static ASTNode *make_type_node(const char *type_name, YYLTYPE loc);
 static ASTNode *make_decl_node(const char *name, const char *decl_type, ExprValue *expr, YYLTYPE loc);
+static ASTNode *make_inferred_decl_node(const char *name, ExprValue *expr, YYLTYPE loc);
 static ASTNode *make_assign_node(const char *name, ExprValue *expr, YYLTYPE loc);
 static ASTNode *make_identifier_expr(const char *name, YYLTYPE loc, char **out_type);
 static ParamList *params_new(void);
@@ -120,7 +121,7 @@ static void cleanup_parser_state(void);
     ArgList *args;
 }
 
-%token IF ELIF ELSE WH FOR IN FN RET
+%token IF ELIF ELSE WH FOR IN FN RET VAR
 %token TYPE_INT TYPE_FLOAT TYPE_STR TYPE_BOOL
 %token TRUE FALSE
 %token INDENT DEDENT NEWLINE
@@ -270,6 +271,11 @@ declaration:
         free_text($2);
         expr_release($4);
     }
+    | VAR ID ASSIGN expression {
+        $$ = make_inferred_decl_node($2, $4, @2);
+        free_text($2);
+        expr_release($4);
+    }
     ;
 
 assignment:
@@ -374,6 +380,8 @@ for_statement:
             loop_symbol.name = $2;
             loop_symbol.type = "int";
             loop_symbol.category = SYMBOL_VARIABLE;
+            loop_symbol.decl_line = @2.first_line;
+            loop_symbol.decl_column = @2.first_column;
             if (!symtab_define(loop_symbol, 0)) {
                 semantic_error_at(@2, "variable '%s' is already declared in this scope", $2);
             }
@@ -782,6 +790,8 @@ static ASTNode *make_decl_node(const char *name, const char *decl_type, ExprValu
     symbol.name = (char *)name;
     symbol.type = (char *)decl_type;
     symbol.category = SYMBOL_VARIABLE;
+    symbol.decl_line = loc.first_line;
+    symbol.decl_column = loc.first_column;
 
     if (symtab_exists_current(name)) {
         semantic_error_at(loc, "variable '%s' is already declared in this scope", name);
@@ -799,6 +809,29 @@ static ASTNode *make_decl_node(const char *name, const char *decl_type, ExprValu
     return decl;
 }
 
+static ASTNode *make_inferred_decl_node(const char *name, ExprValue *expr, YYLTYPE loc) {
+    Symbol symbol = {0};
+    ASTNode *decl = ast_new("InferredVarDecl", name, loc.first_line, loc.first_column);
+
+    symbol.name = (char *)name;
+    symbol.type = expr->type;
+    symbol.category = SYMBOL_VARIABLE;
+    symbol.decl_line = loc.first_line;
+    symbol.decl_column = loc.first_column;
+
+    /* Invalid initializers keep the AST decorated but avoid defining a broken symbol. */
+    if (symtab_exists_current(name)) {
+        semantic_error_at(loc, "variable '%s' is already declared in this scope", name);
+    } else if (!is_error_type(expr->type) && !symtab_define(symbol, 0)) {
+        semantic_error_at(loc, "variable '%s' is already declared in this scope", name);
+    }
+
+    ast_add_child(decl, make_type_node(expr->type, loc));
+    ast_add_child(decl, expr->node);
+    ast_set_type(decl, expr->type);
+    return decl;
+}
+
 static ASTNode *make_assign_node(const char *name, ExprValue *expr, YYLTYPE loc) {
     Symbol *symbol = symtab_lookup(name);
     ASTNode *assign = ast_new("Assign", name, loc.first_line, loc.first_column);
@@ -808,6 +841,8 @@ static ASTNode *make_assign_node(const char *name, ExprValue *expr, YYLTYPE loc)
         inferred.name = (char *)name;
         inferred.type = expr->type;
         inferred.category = SYMBOL_VARIABLE;
+        inferred.decl_line = loc.first_line;
+        inferred.decl_column = loc.first_column;
         if (!is_error_type(expr->type) && !symtab_define(inferred, 0)) {
             semantic_error_at(loc, "variable '%s' is already declared in this scope", name);
         }
@@ -837,6 +872,7 @@ static ASTNode *make_identifier_expr(const char *name, YYLTYPE loc, char **out_t
         semantic_error_at(loc, "function '%s' must be called with parentheses", name);
         *out_type = copy_string("error");
     } else {
+        symtab_mark_read(symbol);
         *out_type = copy_string(symbol->type);
     }
 
@@ -946,6 +982,8 @@ static void define_function_symbol(const char *name, ParamList *params, const ch
     symbol.name = (char *)name;
     symbol.type = (char *)return_type;
     symbol.category = SYMBOL_FUNCTION;
+    symbol.decl_line = loc.first_line;
+    symbol.decl_column = loc.first_column;
     symbol.param_types = param_types;
     symbol.param_count = params->count;
     symbol.return_type = (char *)return_type;
@@ -967,6 +1005,8 @@ static void define_function_params(ParamList *params) {
         symbol.name = params->items[i].name;
         symbol.type = params->items[i].type;
         symbol.category = SYMBOL_VARIABLE;
+        symbol.decl_line = params->items[i].line;
+        symbol.decl_column = params->items[i].column;
 
         if (!symtab_define(symbol, 0)) {
             semantic_error_at(loc, "parameter '%s' is already declared in this scope", params->items[i].name);
@@ -1051,6 +1091,7 @@ static const char *friendly_token_name(const char *token) {
         {"IN", "'in'"},
         {"FN", "'fn'"},
         {"RET", "'ret'"},
+        {"VAR", "'var'"},
         {"TYPE_INT", "'int'"},
         {"TYPE_FLOAT", "'float'"},
         {"TYPE_STR", "'str'"},

@@ -17,6 +17,7 @@ static size_t scope_capacity = 0;
 static char *copy_string(const char *text);
 static void symbol_copy(Symbol *destination, const Symbol *source);
 static void symbol_free(Symbol *symbol);
+static void symbol_warn_if_unused(const Symbol *symbol);
 static Symbol *scope_lookup(Scope *scope, const char *name);
 
 void symtab_init(void) {
@@ -54,6 +55,8 @@ void symtab_leave_scope(void) {
 
     scope = &scopes[scope_count - 1];
     for (size_t i = 0; i < scope->count; i++) {
+        /* Emit unused-variable diagnostics before local declaration metadata is released. */
+        symbol_warn_if_unused(&scope->symbols[i]);
         symbol_free(&scope->symbols[i]);
     }
     free(scope->symbols);
@@ -116,6 +119,12 @@ Symbol *symtab_lookup(const char *name) {
     return NULL;
 }
 
+void symtab_mark_read(Symbol *symbol) {
+    if (symbol && symbol->category == SYMBOL_VARIABLE) {
+        symbol->read_count++;
+    }
+}
+
 int symtab_exists_current(const char *name) {
     return symtab_lookup_current(name) != NULL;
 }
@@ -160,6 +169,9 @@ static void symbol_copy(Symbol *destination, const Symbol *source) {
     destination->category = source->category;
     destination->type = copy_string(source->type);
     destination->depth = scope_count == 0 ? 0 : (int)(scope_count - 1);
+    destination->decl_line = source->decl_line;
+    destination->decl_column = source->decl_column;
+    destination->read_count = source->read_count;
     destination->param_count = source->param_count;
     destination->return_type = copy_string(source->return_type);
 
@@ -189,6 +201,17 @@ static void symbol_free(Symbol *symbol) {
         free(symbol->param_types[i]);
     }
     free(symbol->param_types);
+}
+
+static void symbol_warn_if_unused(const Symbol *symbol) {
+    if (!symbol || symbol->category != SYMBOL_VARIABLE || symbol->read_count > 0) {
+        return;
+    }
+
+    fprintf(stderr, "warning: variable '%s' declared but never used at line %d, column %d\n",
+            symbol->name,
+            symbol->decl_line > 0 ? symbol->decl_line : 1,
+            symbol->decl_column > 0 ? symbol->decl_column : 1);
 }
 
 static Symbol *scope_lookup(Scope *scope, const char *name) {
