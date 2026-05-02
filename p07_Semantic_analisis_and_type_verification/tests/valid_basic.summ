@@ -1,0 +1,5 @@
+int x = 3
+y = 4
+float z = x + 2.5
+str name = "compact"
+bool ok = T
