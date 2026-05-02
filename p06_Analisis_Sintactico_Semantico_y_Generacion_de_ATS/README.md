@@ -1,0 +1,137 @@
+# P06 Compact Language Validator
+
+This practice implements a compact indentation-based language with a Flex scanner, a Bison parser, semantic validation, and AST generation in C.
+
+## Language Summary
+
+The language is designed to keep common keywords short while preserving readable syntax:
+
+```text
+fn sum(int a, int b) -> int:
+    ret a + b
+
+int x = 3
+y = 4
+
+if x < y:
+    y = y + 1
+elif x == y:
+    y = 0
+else:
+    y = y - 1
+
+wh y > 0:
+    y = y - 1
+
+for i in 0..10:
+    x = x + i
+```
+
+## Token Reference
+
+| Category | Tokens |
+| --- | --- |
+| Control flow | `if`, `elif`, `else`, `wh`, `for`, `in` |
+| Functions | `fn`, `ret`, `->` |
+| Types | `int`, `float`, `str`, `bool` |
+| Booleans | `T`, `F` |
+| Arithmetic | `+`, `-`, `*`, `/`, `%` |
+| Comparison | `==`, `!=`, `<`, `<=`, `>`, `>=` |
+| Logic | `&`, `\|`, `!` |
+| Assignment and range | `=`, `..` |
+| Structure | `:`, `,`, `(`, `)`, `NEWLINE`, `INDENT`, `DEDENT` |
+
+Comments begin with `#`. Blocks are delimited by indentation, not braces.
+
+Numeric literals do not allow leading zeroes. Valid examples include `0`, `7`, `120`, `0.5`, and `12.5`; invalid examples include `01`, `001`, `01.5`, and `001.5`.
+
+## Semantics
+
+- Variables can be explicitly typed: `int x = 3`.
+- Variables can be inferred on first assignment: `x = 3`.
+- Reassignments must preserve type compatibility.
+- `int` can be assigned to `float`, but incompatible assignments fail.
+- Variables must be declared or inferred before use.
+- Redeclaration and shadowing are rejected.
+- `if`, `elif`, and `wh` conditions must be `bool`.
+- `for i in a..b` requires integer range bounds.
+- Functions must be declared before use.
+- Function arguments are checked by count and type.
+- `ret` must match the declared function return type.
+
+## Build
+
+Requirements:
+
+- CMake >= 3.16
+- C compiler
+- Flex
+- Bison
+- Optional: Graphviz for DOT rendering
+
+Build:
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+## Run
+
+The validator reads source code from `stdin`.
+
+```bash
+./build/p06_validator < tests/valid_functions.lang
+```
+
+Successful programs print a readable AST to `stdout`. Lexical, syntax, and semantic errors are printed to `stderr`.
+
+Optional DOT export:
+
+```bash
+./build/p06_validator --dot ast.dot < tests/valid_functions.lang
+dot -Tpng ast.dot -o ast.png
+```
+
+## Tests
+
+Run the complete suite:
+
+```bash
+python3 tests/run_tests.py
+```
+
+Included valid cases:
+
+- `tests/valid_basic.lang`
+- `tests/valid_control.lang`
+- `tests/valid_functions.lang`
+- `tests/valid_for_range.lang`
+- `tests/valid_zero_literals.lang`
+
+Included invalid cases:
+
+- `tests/invalid_syntax_missing_colon.lang`
+- `tests/invalid_indent.lang`
+- `tests/invalid_undeclared.lang`
+- `tests/invalid_redeclare.lang`
+- `tests/invalid_type_assignment.lang`
+- `tests/invalid_condition_type.lang`
+- `tests/invalid_function_args.lang`
+- `tests/invalid_ret_type.lang`
+- `tests/invalid_leading_zero_int.lang`
+- `tests/invalid_leading_zero_float.lang`
+
+## Implementation Notes
+
+- `src/lexer.l` recognizes compact tokens and emits `NEWLINE`, `INDENT`, and `DEDENT` for Python-like blocks.
+- `src/parser.y` defines the grammar, creates the AST, and performs semantic checks during reductions.
+- `src/ast.c` and `src/ast.h` implement AST nodes, console printing, memory cleanup, and DOT export.
+- `src/symtab.c` and `src/symtab.h` implement scoped symbol tables for variables and functions.
+
+## Documentation Used
+
+- Flex manual: https://westes.github.io/flex/manual/
+- Bison manual: https://www.gnu.org/software/bison/manual/bison.html
+- CMake tutorial: https://cmake.org/cmake/help/latest/guide/tutorial/index.html
+- Graphviz DOT language: https://graphviz.org/doc/info/lang.html
