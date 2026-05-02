@@ -1,5 +1,5 @@
-#ifndef P06_AST_H
-#define P06_AST_H
+#ifndef P07_AST_H
+#define P07_AST_H
 
 #include <stddef.h>
 #include <stdio.h>
