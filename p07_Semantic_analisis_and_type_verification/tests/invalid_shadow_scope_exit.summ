@@ -1,0 +1,4 @@
+int x = 1
+if x < 2:
+    float x = 3.5
+x = 4.5

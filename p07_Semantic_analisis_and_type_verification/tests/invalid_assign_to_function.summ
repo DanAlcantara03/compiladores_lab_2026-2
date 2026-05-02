@@ -1,0 +1,3 @@
+fn id(int x) -> int:
+    ret x
+id = 3

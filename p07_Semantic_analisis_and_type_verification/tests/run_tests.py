@@ -6,13 +6,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BUILD_DIR = ROOT / "build"
-EXECUTABLE = BUILD_DIR / ("p06_validator.exe" if sys.platform.startswith("win") else "p06_validator")
+EXECUTABLE = BUILD_DIR / ("p07_validator.exe" if sys.platform.startswith("win") else "p07_validator")
 
 VALID_TESTS = [
     "valid_basic.summ",
     "valid_control.summ",
     "valid_functions.summ",
     "valid_for_range.summ",
+    "valid_shadowing.summ",
     "valid_zero_literals.summ",
 ]
 
@@ -21,6 +22,13 @@ INVALID_TESTS = {
     "invalid_indent.summ": "lexical error",
     "invalid_undeclared.summ": "semantic error",
     "invalid_redeclare.summ": "semantic error",
+    "invalid_local_redeclare.summ": "semantic error",
+    "invalid_float_to_int.summ": "semantic error",
+    "invalid_bool_arithmetic.summ": "semantic error",
+    "invalid_for_float_range.summ": "semantic error",
+    "invalid_assign_to_function.summ": "semantic error",
+    "invalid_call_variable.summ": "semantic error",
+    "invalid_shadow_scope_exit.summ": "semantic error",
     "invalid_type_assignment.summ": "semantic error",
     "invalid_condition_type.summ": "semantic error",
     "invalid_function_args.summ": "semantic error",

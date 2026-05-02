@@ -1,6 +1,6 @@
-# P06 Compact Language Validator
+# P07 Semantic Analyzer and Type Validator
 
-This practice implements a compact indentation-based language with a Flex scanner, a Bison parser, semantic validation, and AST generation in C.
+This practice implements the semantic-analysis phase requested in laboratory P07 for the compact indentation-based language from P06. It includes a Flex scanner, a Bison parser, a decorated AST, scoped symbol tables, type checking, and safe numeric promotion in C.
 
 ## Language Summary
 
@@ -52,7 +52,9 @@ Numeric literals do not allow leading zeroes. Valid examples include `0`, `7`, `
 - Reassignments must preserve type compatibility.
 - `int` can be assigned to `float`, but incompatible assignments fail.
 - Variables must be declared or inferred before use.
-- Redeclaration and shadowing are rejected.
+- Each symbol stores its name, category, data type, scope depth, and function signature when applicable.
+- Redeclaration in the same scope is rejected.
+- Shadowing is allowed in nested scopes, so an inner declaration can hide an outer one without deleting it.
 - `if`, `elif`, and `wh` conditions must be `bool`.
 - `for i in a..b` requires integer range bounds.
 - Functions must be declared before use.
@@ -81,7 +83,7 @@ cmake --build build
 The validator reads source code from `stdin`.
 
 ```bash
-./build/p06_validator < tests/valid_functions.summ
+./build/p07_validator < tests/valid_functions.summ
 ```
 
 Successful programs print a readable AST to `stdout`. Lexical, syntax, and semantic errors are printed to `stderr`.
@@ -89,7 +91,7 @@ Successful programs print a readable AST to `stdout`. Lexical, syntax, and seman
 Optional DOT export:
 
 ```bash
-./build/p06_validator --dot ast.dot < tests/valid_functions.summ
+./build/p07_validator --dot ast.dot < tests/valid_functions.summ
 dot -Tpng ast.dot -o ast.png
 ```
 
@@ -107,6 +109,7 @@ Included valid cases:
 - `tests/valid_control.summ`
 - `tests/valid_functions.summ`
 - `tests/valid_for_range.summ`
+- `tests/valid_shadowing.summ`
 - `tests/valid_zero_literals.summ`
 
 Included invalid cases:
@@ -115,6 +118,7 @@ Included invalid cases:
 - `tests/invalid_indent.summ`
 - `tests/invalid_undeclared.summ`
 - `tests/invalid_redeclare.summ`
+- `tests/invalid_local_redeclare.summ`
 - `tests/invalid_type_assignment.summ`
 - `tests/invalid_condition_type.summ`
 - `tests/invalid_function_args.summ`
@@ -125,9 +129,9 @@ Included invalid cases:
 ## Implementation Notes
 
 - `src/lexer.l` recognizes compact tokens and emits `NEWLINE`, `INDENT`, and `DEDENT` for Python-like blocks.
-- `src/parser.y` defines the grammar, creates the AST, and performs semantic checks during reductions.
+- `src/parser.y` defines the grammar, creates the AST, and performs semantic checks during reductions while accumulating errors.
 - `src/ast.c` and `src/ast.h` implement AST nodes, console printing, memory cleanup, and DOT export.
-- `src/symtab.c` and `src/symtab.h` implement scoped symbol tables for variables and functions.
+- `src/symtab.c` and `src/symtab.h` implement scoped symbol tables for variables, constants, and functions, including current-scope lookup and visible-scope lookup.
 
 ## Documentation Used
 
