@@ -144,10 +144,6 @@ Included warning cases:
 - `tests/warning_unused_local.summ`
 - `tests/warning_unused_parameter.summ`
 
-## Optional Extra Work
-
-Implemented optional extra-point items are documented in [`EXTRA_IMPLEMENTATION_TODO.md`](EXTRA_IMPLEMENTATION_TODO.md).
-
 ## Implementation Notes
 
 - `src/lexer.l` recognizes compact tokens and emits `NEWLINE`, `INDENT`, and `DEDENT` for Python-like blocks.
