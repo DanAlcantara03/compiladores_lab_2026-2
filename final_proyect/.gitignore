@@ -1,3 +1,4 @@
 summc
 build/
 build-cmake/
+generated/

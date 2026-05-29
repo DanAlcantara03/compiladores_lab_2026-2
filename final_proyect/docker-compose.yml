@@ -1,0 +1,8 @@
+services:
+  summc:
+    build: .
+    working_dir: /workspace
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - .:/workspace
+    command: ["sh", "scripts/docker-generate.sh"]

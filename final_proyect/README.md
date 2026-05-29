@@ -27,6 +27,28 @@ cmake -S . -B build-cmake
 cmake --build build-cmake
 ```
 
+## Generar todo con Docker
+
+Si no quieres instalar dependencias en tu maquina, usa Docker:
+
+```bash
+docker compose run --rm summc
+```
+
+Ese comando limpia y regenera:
+
+- `summc`
+- `build/`
+- `build-cmake/`
+- `generated/*.fis` con todos los ejemplos de `examples/*.summ`
+
+Alternativa sin Docker Compose:
+
+```bash
+docker build -t summc-builder .
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/workspace" summc-builder
+```
+
 ## Uso
 
 El compilador lee Summarize desde `stdin` y escribe FIS-25 en `stdout`:
