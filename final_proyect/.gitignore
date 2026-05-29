@@ -1,0 +1,5 @@
+summc
+build/
+build-cmake/
+*.fis
+*.dot
