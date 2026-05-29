@@ -1,0 +1,195 @@
+[33mc994516[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/ProyectoFinal[m[33m, [m[1;31morigin/feature/ProyectoFinal[m[33m)[m docs(README.pdf): Just the pdf of the markdown file README.md to be more clear.
+[33m67cae5a[m build: add summc build setup and project documentation
+[33md4bd42e[m test: add code generation regression suite
+[33m0e41513[m feat(parser): wire semantic pipeline into FIS-25 code generation
+[33m5cc756b[m feat(codegen): add FIS-25 intermediate code generator
+[33m123f070[m feat(Final_Proyecto): initialization in Practice 7 base, in this part we just implement a compiler that transforms our code to an intermediate code, so text.summ -> text.ci
+[33m1183e5d[m feat(Proyecto_Final): Inicialización del proyecto final, en base a la ultima practica hecha, (la de semantica), para terminar el proyecto ya solo necesitamos crear un programa que nos pase el codigo de nuestro programa a lenguaje intermedio ci, i.e. de text.summ a text.ci, de esta forma podremos probar el codigo con los programas que se nos piden asi como cualquier otro en general.
+[33m3db4504[m[33m ([m[1;31morigin/feature/p07-analisis_semantico_y_verificacion_de_tipos[m[33m, [m[1;32mfeature/p07-analisis_semantico_y_verificacion_de_tipos[m[33m)[m docs(README.md): Just a little change in the readme.
+[33m6f9e6c7[m docs(docs): Just some examples of how the program works.
+[33m11b2f92[m docs(README.md): Readme update
+[33m5c50142[m feat(test): warn about unused variables and parameters
+[33m533c84a[m feat(src): support var declarations with inferred types
+[33m1147666[m build(p07):add Dockerfile for semantic validator
+[33m9c8e362[m docs(p07): add generated AST graph sample for scoped shadowing validation
+[33mc765b85[m test(p07): add semantic regression coverage and align validator naming with project scope
+[33mc15a5a0[m fix(src/symtab): add symbol categories and current-scope lookup
+[33m1f04682[m chore(src/ast.h): update AST header guard for p07
+[33mb691f8d[m fix(src/parser.y): restrict redeclaration checks to current scope
+[33mbffbd92[m feat(p07): Rename p06 project to p07 semantic analysis and type verification
+[33mf78cd3e[m feat(p07): Initial State, I'm going to use the same base of the p06 to do my p07, so I just change the name of the folder.
+[33mbe7bcfb[m[33m ([m[1;32mfeature/p06-ASintactico-Semantico-Generacion-ATS[m[33m, [m[1;32mdevelop[m[33m)[m chore(tests): rename test fixtures from lang to summ
+[33m6475ce6[m fix(src/parser.y): format syntax errors with friendly expected tokens.
+[33m8c7951b[m fix(src/lexer.l): restore location tracking after BOL token rewind
+[33m1d846f9[m[33m ([m[1;31morigin/feature/p06-ASintactico-Semantico-Generacion-ATS[m[33m, [m[1;31morigin/develop[m[33m)[m feat(p06): I do my own mini lexer and parser of a language based in python, because its blocks are recognized by indentation.
+[33mbaa5da6[m feat(p06): Initial files to implement the ATS
+[33md3bcbad[m Merge branch 'feature/p05-driver_to_a_lalr1_parser' into develop
+[33m40760ad[m Merge branch 'feature/p04-first_follow_lab' into develop
+[33m3a63816[m[33m ([m[1;31morigin/feature/p05-driver_to_a_lalr1_parser[m[33m, [m[1;32mfeature/p05-driver_to_a_lalr1_parser[m[33m)[m Just remove the docs folder because of the redundance
+[33m8f6549a[m tests(examples/10_Sofia_grammar): Now this folder is for my classmate Sofia.
+[33mf2388de[m tests(examples/09_Oscar_grammar): Now this folder is for my classmate Oscar.
+[33md7240c5[m tests(examples/08_Jonathan_grammar): Now this folder is for my classmate Jonathan.
+[33mbf92704[m tests(examples/07_Tonatiuh_grammar): Now this folder is for my classmate Tonatiuh.
+[33m84a2fb1[m tests(examples/06_Diego_grammar): Now this folder is for my classmate Diego.
+[33mce61d73[m tests(examples/05_Pablo_grammar): Now this folder is for my classmate Pablo.
+[33m200926b[m tests(examples/04_Tomas_grammar): Now this folder is for my classmate Tomas.
+[33mcf93328[m tests(examples/03_Paolo_grammar): Now this folder is for my classmate Paolo.
+[33m23ce137[m tests(examples/02_Xime_grammar): Now this folder is for my classmate Xime.
+[33m7ac9263[m tests(examples/01_Dan_grammar): I create a folder to group the grammar, the pdf of the LALR(1), the inputs, and also the tables and results in one place for each student, this folder is first for my specific case.
+[33mfbc2182[m tests(examples/00_Example): Move the grammar_decl.txt, input_decl.c parse_table_decl.json and create the parse_table_decl.csv and results_decl.txt to the 00_Example folder.
+[33mf0a2085[m docs(examples/results_dan.txt): Here is the result of the lal_trace_driver.cpp execution
+[33m80de701[m feat(lalr_trace_driver.cpp): I add a functionality that let us put as a final argument the route to create a file with the output of the driver
+[33m3190413[m test(examples): I just reorder in folders my example and the default example, this taking into account that I'll test all my classmates grammars with my programs and here is where I want to save all of them with a unique folder for a classmate.
+[33m63ea909[m build(CMakeLists.txt): enable lalr_trace_drvier in CMake.
+[33md715d70[m test(examples/grammar_dan): I just have a mistake with my grammar, so I correct it.
+[33ma78bf18[m feat(tools/lalr_trace_driver.cpp): print parsing traces and wire trace driver cli.
+[33mdf56c50[m feat(tools/lalr_trace_driver.cpp): execute shift-reduce parsing and also build the traces
+[33m8726d96[m feat(tools/lalr_trace_driver.cpp): Tokenize input strings for trace driver.
+[33m20e74b0[m feat(tools/lalr_trace_driver.cpp): Load grammar productions for parser reductions.
+[33md4aadbb[m feat(tools/lalr_trace_driver.cpp): Add the lines to load and validate lalr parse table from json.
+[33m35ae999[m feat(tools/lalr_trace_driver.cpp): Create the trace driver core types and utilities.
+[33meb8e730[m feat(tools/lalr_trace_driver.cpp): Add the principal libraries I'll use to implement the driver.
+[33m42a992b[m feat(test): Add the case of my grammar to test, first the parse_table, and then the lalr_trace_driver.
+[33mc6bb552[m docs(Alcantara_Daniel_LALR(1).pdf): I realize that there is a conflict in my grammar when I do the parse_table, so I changed it all for this other grammar and also redo the LALR(0) Automaton.
+[33m7c67e9e[m docs(LALR(1)-Dan): I just add my grammar to the repository
+[33m2273a60[m docs(LALR(1)-Document)
+[33m4d02e3a[m feat(p05): Initial files to do the driver implementation.
+[33m0c1ba05[m[33m ([m[1;31morigin/feature/p04-first_follow_lab[m[33m, [m[1;32mfeature/p04-first_follow_lab[m[33m)[m docs(src/analyzer.c): I just add some extra comments in the largest functions so we can read easily the source code.
+[33m3937977[m feat(src/analyzer.c): implement FOLLOW lookup for any non-terminal
+[33m7abf480[m docs(src/analyzer.c):Add some comments to do readable the source code in the compute_first_for_non_terminal function.
+[33m2594ba2[m feat(src/analyzer.c): collect FOLLOW symbols for one non-terminal.
+[33m1db6b15[m feat(src/analyzer.c): compute FOLLOW table
+[33m0a85edf[m feat(src/analyzer.c): Compute FIRST and nullable tables.
+[33m36224d1[m feat(src/analyzer.c): implement free_symbol_array cleanup
+[33mbc07a8e[m feat(src/analyzer.c): implement FOLLOW lookup for the start symbol
+[33mf037c54[m feat(src/analyzer.c): implement FIRST lookup for the start symbol
+[33m17aff05[m feat(src/analyzer.c): implement FIRST lookup for any non- terminal
+[33mf49e0bc[m feat(src/analyzer.c): collect FIRST symbols for one non-terminal
+[33m2ca17ba[m feat(src/analyzer.c): implement add_symbol_to_array helper
+[33m15b3a62[m feat(src/analyzer.c): implement find_terminal_id helper
+[33md0d7aa8[m feat(src/grammar.c): Add the function implementation of free_grammar, to clean with succesfull the dinamic memory used with a grammar.
+[33m34ec7bc[m build(CMakeLists.txt): Add include directory to first_and_follow target.
+[33m8f967ae[m feat(include/grammar.h): Add a sign to free_grammar, because we use allocated memory to create it so, we need the free function to clean that after we use it.
+[33m5c9f6f2[m chore(p04): initialize first/follow practice
+[33m17b2fef[m[33m ([m[1;31morigin/feature/p03-lexer[m[33m, [m[1;32mfeature/p03-lexer[m[33m)[m build(CMakeLists.txt): Link scanner test against scanner library.
+[33mee45835[m test(tests/test_scanner_token_name.c): Exercise real scanner cases.
+[33mbf27dc8[m test(tests/test_symtab.c): Print subtest progress in symtab tests.
+[33m5cabd98[m build(CMakeLists.txt): Add the enable testing for the last tests commited.
+[33m43b9161[m test(tests/): Add simple tests for test_scanner_token_name and rude tests for symtab.c
+[33me848aae[m fix(src/symtab.c): Change the strdup to memcpy, because strdup is POSIX, not standard C11
+[33m9cfedb9[m docs(src/scanner.l): I also add a little documentation for the scanner_advance_pos function defined in the rules preambule.
+[33mbd78cb1[m docs(src): Added concise comments to all the .c files with no behavior changes.
+[33m1aeb3af[m docs(include): Added concise comments to all the .h files with no behavior changes
+[33mf4b4fb2[m fix(include/scanner.l): Implement the support for columns at the <COMMENT><<EOF>> error and also change the ID after the #include and #define rules.
+[33m100bd0e[m feature(include/scanner.l): Add rules for preprocessor operators
+[33m9d433fb[m feature(include/scanner.c): Add cases for preprocessor operators
+[33m5841827[m fix(include/symtab.c): Add symtab.c file
+[33m79145aa[m feat(include/scanner.h): Add tokens for preprocessor operations
+[33mc82b308[m feat(include/scanner.l): Add helper and rules for generic error
+[33m54bec7c[m feat(include/scanner.h): Add declarations for use in tests
+[33md264200[m feat(include/CMakeLists.txt): Add symtab.c to the target of scanner
+[33me1b4f22[m feat(include/scanner.c): Include symtab.h and call the symtab_destroy function
+[33maf09732[m feat(include/scanner.l): Modify the definition of ID to use the symbols table function
+[33md3da782[m feat(include/scanner.l): Add the file symtab.h
+[33mbd8ff6d[m feat(include/symtab.h): Add the second part of the extra points of the practice
+[33m971df7a[m feat(src/scanner.l): Add the final part of the first point
+[33m0edfd9e[m feat(src/scanner.c): Add the next part of the first point
+[33mb68e79f[m feat(src/scanner.h): Add the 1st extra point of the practice
+[33m93d418d[m fix(src/scanner.l): The comments(/* */) between %% and %% interfer with the flex compilation so I deleted all of them
+[33m12ef971[m fix(src/scanner.l): It's possible to fall in an innfinite loop because of the line 82 return TOK_ERROR in the COMMENT environment.
+[33m855449e[m fix(src/scanner.c): I realized that I declare 2 mains so I fix it and also delete the comments of the original main
+[33mf15e159[m feature(src/scanner.c): I add the main to finish the program
+[33m841c4ec[m fix(src/scanner.l): Section 11 updated.
+[33mbc326ab[m fix(src/scanner.l): Section 7 and 8 updated.
+[33m5769fce[m fix(src/scanner.l): Section 4 updated again.
+[33m2e8c352[m fix(src/scanner.l): Section 4 updated.
+[33m00af70b[m feature(src/scanner.l): Section 13 finished.
+[33me69f7fc[m feature(src/scanner.l): Section 12 finished.
+[33m043ea87[m feature(src/scanner.l): Section 11 finished.
+[33mf35060d[m feature(src/scanner.l): Section 10 finished.
+[33m54f1ac1[m feature(src/scanner.l): Section 9 finished.
+[33m2f88d33[m feature(src/scanner.l): Section 8 finished.
+[33mb68ed2a[m feature(src/scanner.l): Section 7 finished.
+[33m1bd5eda[m feature(src/scanner.l): Section 6 finished.
+[33m16ba5fa[m feature(src/scanner.l): Section 5 finished.
+[33m83a95e6[m feature(src/scanner.l): Section 3 finished.
+[33m2bc7507[m feature(src/scanner.l): Section 2 finished.
+[33m242e6b0[m feature(src/scanner.l): Section 1 finished.
+[33m4d375dc[m chore(validator): Change the chmod of validator to give it exec permisions.
+[33mddb975a[m build(cmake): update scanner paths for src and include layout
+[33me019ee2[m chore(p03): add initial lab skeleton provided by TA
+[33ma70c805[m Merge branch 'feature/p01-regex_to_nfa' into develop I forgot to merge the develop branch, so i do it now
+[33m93eca00[m[33m ([m[1;31morigin/feature/p01-regex_to_nfa[m[33m, [m[1;32mfeature/p01-regex_to_nfa[m[33m, [m[1;32mbugfix/p01-regex_to_nfa[m[33m)[m build(docker): make validator executable
+[33m03fef4e[m fix(src/main): adapt main to regex/nfa interfaces
+[33m46e17ef[m test(tests/nfa_tests.c): add nfa_print output verification.
+[33m0cf40f5[m test(tests/nfa_tests.c): add MAX_STATES boundary case.
+[33mf3edba8[m test(tests/nfa_tests.c): add local epsilon-cache build case.
+[33m5e6f25f[m test(tests/nfa_tests.c): add runtime input validation cases.
+[33m83e84b8[m test(tests/nfa_tests.c): add complex expression matching case.
+[33m6692cc1[m test(tests/nfa_tests.c): add closure and optional matching cases.
+[33m4b8d0aa[m test(tests/nfa_tests.c): add basic language acceptance cases.
+[33m57914a2[m test(tests/nfa_tests.c): add invalid postfix rejection cases.
+[33m0fd0e72[m test(tests/nfa_tests.c): add init/free idempotency test.
+[33me9d121c[m test(tests/nfa_tests.c): add stream output assertion helper.
+[33mbfab25e[m test(tests/nfa_tests.c): implement match assertion helper.
+[33m6043bad[m test(tests/nfa_tests.c): add empty-nfa assertion helper.
+[33m2091bfa[m test(tests/nfa_tests.c): implement base test helper utilities.
+[33m9671f29[m test(tests/nfa_tests.c): initialize nfa test scaffold.
+[33m0dbaf2f[m feat(src/nfa.c): implemented match_nfa().
+[33m8c5fcd7[m feat(src/nfa.c): implemented epsilon_closure().
+[33m540e3c0[m feat(src/nfa.c): implemented calculate_epsilon_closure().
+[33m342feb4[m feat(src/nfa.c): implemented t_nfa_to_nfa().
+[33m014c3f0[m feat(nfa): add helper to validate temporary fragment state bounds
+[33m009d28d[m fix(src/nfa.c): use nfa_init() in regex_to_nfa fallback paths
+[33maf35400[m fix(src/nfa.c): add NFA lifecycle initialization and cleanup
+[33m0b1582d[m feat(src/nfa.c): implement regex_to_nfa()
+[33m38eb459[m fix(src/nfa.c): store symbol in manager alphabet in symbol_nfa()
+[33m4e910b6[m refactor(include/nfa.h): Refactor the define of EPSILON_SYMBOL, to a less common character in regex, also is outside the standard ASCII range.
+[33m8a11da6[m refactor(tests/regx_test.c): Add a couple of tests in each sub_test_function that could use the new operators added in the previous commits.
+[33m0906ed7[m refactor(src/regex.c): Refactor the code to be compatible with the new operators added in the previous commit
+[33mb82b5b1[m refactor(include/regex.h): Add the operators OPTIONAL and POSITIVE_CLOSURE to the posible regex_symbols.
+[33mea7eb06[m feat(src/nfa.c): Implement optional_nfa()
+[33m853c7e8[m feat(src/nfa.c): Implement kleen_closure_nfa()
+[33mc10c8cd[m feat(src/nfa.c): Implement positive_closure_nfa()
+[33mece2687[m feat(src/nfa.c): Implement union_nfa()
+[33m70eb4d4[m refactor(include/nfa.h): rename alphabet_init() to new_alphabet()
+[33md75dc5c[m feat(src/nfa.c): Implement symbol_nfa
+[33maeb9d47[m feat(src/nfa.c): implement concat_nfa()
+[33mb708343[m feat(src/nfa.h)Implement add_transition()
+[33ma9b6125[m feat(src/nfa.c): Implemented new_state()
+[33m0560f55[m feat(src/nfa.c): Implement new_states_manager()
+[33mc1c373a[m feat(src/nfa.c): Function add_symbol() was implemeted
+[33mbae9c41[m feat(src/nfa.c): Implemente the functión new_alphabet(), it returns an alphabet initialized with the epsilon symbol.
+[33m563d79f[m feat(src/nfa.c): I created a functión to verify if a manager is valid, just to have a robust flow i.e. validate the manager early and fail fast on invalid states.
+[33mebb2ad6[m refactor(src/nfa.c): Change the structs definition just for stetic.
+[33mea4732c[m feat(include/nfa.h): add alphabet and nfa helper API declarations
+[33m5bc0394[m feat(src/nfa.c): Add the inicialization of the file obtained from 'https://github.com/adrian-mm-fc/Compilers-2026-2/blob/main/src/nfa.c' file
+[33mad96ea4[m feat(include/nfa.h): Add the initializatión of the nfa.h file to implement it
+[33m2bc91fb[m docs(tests/regex_test.c): Added minimal documentatión in each test.
+[33md972e79[m dosc(tests/data_structures_test.c): Add a little documentation to the data_structures_tests
+[33m85dc265[m test(tests/data_structures_test.c): add coverage for set source-based initialization
+[33m0cbf1fe[m feat(src/data_structures.c): implement set initialization from array, stack, queue, and string sources
+[33m6239163[m feat(include/data_structures.h): add generic set source descriptor and init-from API
+[33m3ed52a5[m test(tests/regex_test.c): I finished the tests for regex.c
+[33m8a31be1[m chore(CMakeLists.txt): Add the file data_structures.c to executable in regex_tests.
+[33m289d02d[m core(CMakeLists.txt): add standalone regex_tests target and CTest entry
+[33md131e12[m feat(src/regex.c): Finally for finish the 1st versión of this file, I implemented the functión 'regex_print' /
+[33m548cbf2[m feat(src/regex.c): The other principal helper function 'regex_explicit_infix_to_postfix' has been implemented./
+[33mb64af13[m chore(CMakeListst.txt): add data_structures.c to the executables, and a CTest entrfor data structures.
+[33me25a889[m test(tests/data_structures_test.c): add unit tests for the data structures module (all works well)
+[33m09a89cf[m feat(src/data_structures.c): add at the momento the two principal data structures that I need (Stack and Queue) and all the functions specified in the data_structures.h header
+[33m750e2bd[m feat(include/data_structures.h): define public API for data structures module/
+[33m7347ab3[m docs(src/regex.c): I just deleate a line that wouldn't be there in the starts_atom function.
+[33m2d5613e[m feat(src/regex.c) One of the two principal helper functions 'from_implicit_to_explicit_concat' has been implemented.
+[33ma9ad8d8[m feat(src/regex.c): The principal functión parse_regex has been implemented
+[33m5315162[m feat(src/regex.c): Add the function to clean the regex structure idealy created with create_regex.
+[33ma804400[m feat(src/regex.c): The feature to create regex expressions just with strings is implemented
+[33m4035a8c[m fix(src/regex.c): Add the import regex.h to call the struct regex and also the enum regex_symbols
+[33m4c6e768[m chore(src/regex.c): scaffold implementation aligned with regex.h
+[33m4b021f2[m feat(include/regex.h): define initial regex API for main integration and testing
+[33m868e23b[m docs(readme): standardize commit message convention
+[33mef6af8b[m (Initialize)-I just do an initializatión of the principal files to implement in this practice, and also for compilation I add a line to the CMakeLists.txt
+[33m3cbe83c[m I just initialize the practice p1-regex_to_nfa, and also change a little bit the README.md. In summary I'm going to do the things a little diferent because of the current practice requirements, all the details are in the new README.
+[33m575531e[m A little modification in the README, to clarify the Project Structure, and also the Git Workflow with practices and the project.
+[33mc08bd3f[m Initialize C project structure and build system
+[33m2494341[m Initial commit
