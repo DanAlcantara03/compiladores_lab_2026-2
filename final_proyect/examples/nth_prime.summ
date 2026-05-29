@@ -1,0 +1,22 @@
+# Input: n
+# Output: the n-th prime number, with n starting at 1
+int target = input()
+int count = 0
+int candidate = 1
+int last = 2
+
+wh count < target:
+    candidate = candidate + 1
+    bool is_prime = T
+    int divisor = 2
+
+    wh divisor * divisor <= candidate:
+        if candidate % divisor == 0:
+            is_prime = F
+        divisor = divisor + 1
+
+    if is_prime:
+        count = count + 1
+        last = candidate
+
+print(last)
