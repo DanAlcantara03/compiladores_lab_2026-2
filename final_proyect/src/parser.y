@@ -29,6 +29,7 @@
 
 %{
 #include "ast.h"
+#include "codegen.h"
 #include "symtab.h"
 
 #include <stdarg.h>
@@ -72,6 +73,10 @@ static ASTNode *root = NULL;
 static int semantic_error_count = 0;
 static const char *current_return_type = NULL;
 static const char *dot_output_path = NULL;
+static const char *fis_output_path = NULL;
+static int emit_ast_only = 0;
+static int check_only = 0;
+static int enable_optimization = 1;
 
 static char *copy_string(const char *text);
 static void free_text(char *text);
@@ -105,7 +110,7 @@ static void syntax_error_expected_at(YYLTYPE loc, const char *expected, const ch
 static const char *friendly_token_name(const char *token);
 static void copy_message_token(const char *start, size_t length, char *target, size_t target_size);
 static void print_expected_tokens(FILE *stream, const char *expected);
-static void print_success_output(void);
+static int print_success_output(void);
 static void cleanup_parser_state(void);
 %}
 
@@ -1029,6 +1034,47 @@ static ExprValue *make_call_expr(const char *name, ArgList *args, YYLTYPE loc) {
     ASTNode *call = ast_new("Call", name, loc.first_line, loc.first_column);
     const char *return_type = "error";
 
+    if (strcmp(name, "print") == 0) {
+        if (args->count != 1) {
+            semantic_error_at(loc, "native function 'print' expects 1 argument but got %zu", args->count);
+        }
+        ast_add_child(call, args->node);
+        return expr_new(call, "int");
+    }
+
+    if (strcmp(name, "input") == 0) {
+        if (args->count != 0) {
+            semantic_error_at(loc, "native function 'input' expects 0 arguments but got %zu", args->count);
+        }
+        ast_add_child(call, args->node);
+        return expr_new(call, "int");
+    }
+
+    if (strcmp(name, "pixel") == 0) {
+        if (args->count != 3) {
+            semantic_error_at(loc, "native function 'pixel' expects 3 arguments but got %zu", args->count);
+        } else {
+            for (size_t i = 0; i < args->count; i++) {
+                if (!is_assignable_type("int", args->types[i])) {
+                    semantic_error_at(loc, "argument %zu of native function 'pixel' expects int but got %s",
+                                      i + 1, args->types[i]);
+                }
+            }
+        }
+        ast_add_child(call, args->node);
+        return expr_new(call, "int");
+    }
+
+    if (strcmp(name, "key") == 0) {
+        if (args->count != 1) {
+            semantic_error_at(loc, "native function 'key' expects 1 argument but got %zu", args->count);
+        } else if (!is_assignable_type("int", args->types[0])) {
+            semantic_error_at(loc, "argument 1 of native function 'key' expects int but got %s", args->types[0]);
+        }
+        ast_add_child(call, args->node);
+        return expr_new(call, "bool");
+    }
+
     if (!symbol) {
         semantic_error_at(loc, "function '%s' is not declared", name);
     } else if (symbol->category != SYMBOL_FUNCTION) {
@@ -1166,18 +1212,54 @@ static void print_expected_tokens(FILE *stream, const char *expected) {
     }
 }
 
-static void print_success_output(void) {
+static int print_success_output(void) {
+    CodegenOptions options = {0};
+    FILE *fis_output = stdout;
+
     if (!root) {
-        return;
+        return 1;
     }
 
-    printf("Analysis success. AST:\n");
-    ast_print(root, 0);
     if (dot_output_path) {
         if (ast_write_dot(root, dot_output_path) == 0) {
-            printf("DOT written to %s\n", dot_output_path);
+            fprintf(stderr, "DOT written to %s\n", dot_output_path);
         }
     }
+
+    if (check_only) {
+        printf("Semantic check success.\n");
+        return 1;
+    }
+
+    if (emit_ast_only) {
+        printf("Analysis success. AST:\n");
+        ast_print(root, 0);
+        if (!fis_output_path) {
+            return 1;
+        }
+    }
+
+    if (fis_output_path) {
+        fis_output = fopen(fis_output_path, "w");
+        if (!fis_output) {
+            fprintf(stderr, "error: cannot write FIS-25 output '%s'\n", fis_output_path);
+            return 0;
+        }
+    }
+
+    options.optimize = enable_optimization;
+    if (codegen_emit_fis25(root, fis_output, options) != 0) {
+        if (fis_output_path) {
+            fclose(fis_output);
+        }
+        return 0;
+    }
+
+    if (fis_output_path) {
+        fclose(fis_output);
+        fprintf(stderr, "FIS-25 code written to %s\n", fis_output_path);
+    }
+    return 1;
 }
 
 static void cleanup_parser_state(void) {
@@ -1192,8 +1274,18 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--dot") == 0 && i + 1 < argc) {
             dot_output_path = argv[++i];
+        } else if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
+            fis_output_path = argv[++i];
+        } else if (strcmp(argv[i], "--ast") == 0) {
+            emit_ast_only = 1;
+        } else if (strcmp(argv[i], "--check") == 0) {
+            check_only = 1;
+        } else if (strcmp(argv[i], "--no-opt") == 0) {
+            enable_optimization = 0;
         } else {
-            fprintf(stderr, "usage: %s [--dot ast.dot] < source.summ\n", argv[0]);
+            fprintf(stderr,
+                    "usage: %s [--check] [--ast] [--no-opt] [--dot ast.dot] [-o output.ci] < source.summ\n",
+                    argv[0]);
             return EXIT_FAILURE;
         }
     }
@@ -1202,9 +1294,9 @@ int main(int argc, char **argv) {
     parse_result = yyparse();
 
     if (parse_result == 0 && lexer_error_count == 0 && semantic_error_count == 0) {
-        print_success_output();
+        int success = print_success_output();
         cleanup_parser_state();
-        return EXIT_SUCCESS;
+        return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
     cleanup_parser_state();
