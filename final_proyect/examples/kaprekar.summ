@@ -1,0 +1,66 @@
+# Input: four-digit integer with at least two different digits
+# Output: number of iterations and final value
+int n = input()
+int iter = 0
+int d0 = 0
+int d1 = 0
+int d2 = 0
+int d3 = 0
+int q = 0
+int tmp = 0
+int high = 0
+int low = 0
+
+wh n != 6174:
+    d0 = n % 10
+    q = 0
+    tmp = n
+    wh tmp >= 10:
+        tmp = tmp - 10
+        q = q + 1
+    d1 = q % 10
+    tmp = q
+    q = 0
+    wh tmp >= 10:
+        tmp = tmp - 10
+        q = q + 1
+    d2 = q % 10
+    tmp = q
+    q = 0
+    wh tmp >= 10:
+        tmp = tmp - 10
+        q = q + 1
+    d3 = q
+
+    if d0 < d1:
+        tmp = d0
+        d0 = d1
+        d1 = tmp
+    if d1 < d2:
+        tmp = d1
+        d1 = d2
+        d2 = tmp
+    if d2 < d3:
+        tmp = d2
+        d2 = d3
+        d3 = tmp
+    if d0 < d1:
+        tmp = d0
+        d0 = d1
+        d1 = tmp
+    if d1 < d2:
+        tmp = d1
+        d1 = d2
+        d2 = tmp
+    if d0 < d1:
+        tmp = d0
+        d0 = d1
+        d1 = tmp
+
+    high = d0 * 1000 + d1 * 100 + d2 * 10 + d3
+    low = d3 * 1000 + d2 * 100 + d1 * 10 + d0
+    n = high - low
+    iter = iter + 1
+
+print(iter)
+print(n)
