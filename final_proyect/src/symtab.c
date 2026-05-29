@@ -1,23 +1,36 @@
+/**
+ * @file symtab.c
+ * @brief Implementacion de tabla de simbolos basada en una pila de ambitos.
+ */
+
 #include "symtab.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief Ambito individual dentro de la pila semantica.
+ */
 typedef struct Scope {
-    Symbol *symbols;
-    size_t count;
-    size_t capacity;
+    Symbol *symbols;    /**< Arreglo dinamico de simbolos declarados en el ambito. */
+    size_t count;       /**< Cantidad de simbolos usados. */
+    size_t capacity;    /**< Capacidad reservada del arreglo. */
 } Scope;
 
 static Scope *scopes = NULL;
 static size_t scope_count = 0;
 static size_t scope_capacity = 0;
 
+/** @brief Duplica una cadena opcional para almacenarla en la tabla. */
 static char *copy_string(const char *text);
+/** @brief Copia profundamente un simbolo hacia el almacenamiento interno. */
 static void symbol_copy(Symbol *destination, const Symbol *source);
+/** @brief Libera los campos dinamicos de un simbolo. */
 static void symbol_free(Symbol *symbol);
+/** @brief Emite una advertencia si una variable salio de ambito sin lecturas. */
 static void symbol_warn_if_unused(const Symbol *symbol);
+/** @brief Busca un identificador dentro de un solo ambito. */
 static Symbol *scope_lookup(Scope *scope, const char *name);
 
 void symtab_init(void) {

@@ -1,11 +1,20 @@
+/**
+ * @file ast.c
+ * @brief Implementacion de utilidades para nodos AST y exportacion Graphviz.
+ */
+
 #include "ast.h"
 
 #include <stdlib.h>
 #include <string.h>
 
+/** @brief Duplica texto opcional para que el AST sea propietario de sus cadenas. */
 static char *ast_copy_string(const char *text);
+/** @brief Imprime dos espacios por nivel de indentacion. */
 static void ast_print_indent(int indent);
+/** @brief Escribe recursivamente un nodo y sus aristas en formato DOT. */
 static void ast_write_dot_node(FILE *file, const ASTNode *node, int *next_id, int parent_id);
+/** @brief Escapa caracteres especiales dentro de etiquetas DOT. */
 static void ast_write_escaped(FILE *file, const char *text);
 
 ASTNode *ast_new(const char *kind, const char *value, int line, int column) {

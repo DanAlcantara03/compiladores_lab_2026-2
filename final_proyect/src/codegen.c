@@ -1,3 +1,8 @@
+/**
+ * @file codegen.c
+ * @brief Generador de codigo FIS-25 para nodos AST de Summarize.
+ */
+
 #include "codegen.h"
 
 #include <stdarg.h>
@@ -5,62 +10,106 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief Vector dinamico propietario de cadenas.
+ */
 typedef struct StringVec {
-    char **items;
-    size_t count;
-    size_t capacity;
+    char **items;       /**< Cadenas almacenadas. */
+    size_t count;       /**< Cantidad de elementos usados. */
+    size_t capacity;    /**< Capacidad reservada. */
 } StringVec;
 
+/**
+ * @brief Resultado temporal de emitir una expresion.
+ */
 typedef struct Value {
-    char *place;
-    char *type;
-    int is_literal;
+    char *place;        /**< Literal, nombre de variable o temporal donde queda el valor. */
+    char *type;         /**< Tipo semantico usado por optimizaciones. */
+    int is_literal;     /**< Indica si place puede evaluarse como constante. */
 } Value;
 
+/**
+ * @brief Estado mutable de una corrida de generacion.
+ */
 typedef struct CodegenContext {
-    StringVec vars;
-    StringVec lines;
-    int temp_count;
-    int label_count;
-    int errors;
-    int optimize;
-    const char *current_function;
+    StringVec vars;                 /**< Variables y temporales declarados en la salida. */
+    StringVec lines;                /**< Instrucciones FIS-25 emitidas. */
+    int temp_count;                 /**< Secuencia para temporales unicos. */
+    int label_count;                /**< Secuencia para etiquetas unicas. */
+    int errors;                     /**< Errores acumulados durante la emision. */
+    int optimize;                   /**< Habilita plegado de constantes. */
+    const char *current_function;   /**< Funcion en emision, o NULL fuera de una funcion. */
 } CodegenContext;
 
+/** @brief Inserta una cadena ya reservada y transfiere su propiedad al vector. */
 static void vec_push_owned(StringVec *vec, char *text);
+/** @brief Agrega una copia de text solo si no existe en el vector. */
 static void vec_add_unique(StringVec *vec, const char *text);
+/** @brief Indica si text ya esta almacenado en el vector. */
 static int vec_contains(const StringVec *vec, const char *text);
+/** @brief Libera todas las cadenas y el arreglo del vector. */
 static void vec_free(StringVec *vec);
+/** @brief Duplica una cadena opcional. */
 static char *copy_string(const char *text);
+/** @brief Construye una cadena dinamica con formato printf. */
 static char *format_string(const char *format, ...);
+/** @brief Compara de forma segura el kind de un nodo AST. */
 static int same_kind(const ASTNode *node, const char *kind);
+/** @brief Reporta un error de generacion asociado opcionalmente a un nodo. */
 static void cg_error(CodegenContext *ctx, const ASTNode *node, const char *format, ...);
+/** @brief Agrega una instruccion FIS-25 formateada al contexto. */
 static void cg_emit(CodegenContext *ctx, const char *format, ...);
+/** @brief Crea un temporal unico y lo registra como variable de salida. */
 static char *cg_temp(CodegenContext *ctx);
+/** @brief Crea una etiqueta unica usando un prefijo descriptivo. */
 static char *cg_label(CodegenContext *ctx, const char *hint);
+/** @brief Calcula la etiqueta de entrada para una funcion. */
 static char *function_label(const char *name);
+/** @brief Calcula la variable sintetica usada para el retorno de una funcion. */
 static char *function_return_var(const char *name);
+/** @brief Recorre el AST y recolecta variables necesarias antes de emitir codigo. */
 static void collect_variables(CodegenContext *ctx, const ASTNode *node);
+/** @brief Emite un programa completo, separando declaraciones de funcion del flujo principal. */
 static void emit_program(CodegenContext *ctx, const ASTNode *root);
+/** @brief Despacha la emision de una sentencia o bloque segun su kind. */
 static void emit_node(CodegenContext *ctx, const ASTNode *node);
+/** @brief Emite el prologo, parametros, cuerpo y retorno de una funcion. */
 static void emit_function(CodegenContext *ctx, const ASTNode *node);
+/** @brief Emite saltos y etiquetas para una sentencia if/elif/else. */
 static void emit_if(CodegenContext *ctx, const ASTNode *node);
+/** @brief Emite una estructura while con condicion al inicio. */
 static void emit_while(CodegenContext *ctx, const ASTNode *node);
+/** @brief Emite un ciclo for de rango semiabierto. */
 static void emit_for(CodegenContext *ctx, const ASTNode *node);
+/** @brief Emite una asignacion hacia un destino concreto. */
 static void emit_assignment_to(CodegenContext *ctx, const char *dest, const ASTNode *expr);
+/** @brief Emite una expresion y devuelve donde quedo su valor. */
 static Value emit_expr(CodegenContext *ctx, const ASTNode *node);
+/** @brief Emite llamadas nativas y llamadas a funciones de usuario. */
 static Value emit_call(CodegenContext *ctx, const ASTNode *node);
+/** @brief Construye un Value propietario de sus cadenas. */
 static Value value_make(const char *place, const char *type, int is_literal);
+/** @brief Libera las cadenas internas de un Value. */
 static void value_free(Value value);
+/** @brief Convierte literales booleanos del lenguaje a su forma FIS-25. */
 static char *literal_text(const ASTNode *node);
+/** @brief Indica si un tipo participa en operaciones numericas. */
 static int is_numeric_type(const char *type);
+/** @brief Indica si un tipo es int. */
 static int is_int_type(const char *type);
+/** @brief Indica si un tipo es bool. */
 static int is_bool_type(const char *type);
+/** @brief Intenta interpretar un Value literal como double. */
 static int value_as_double(const Value *value, double *out);
+/** @brief Intenta interpretar un Value literal como entero largo. */
 static int value_as_long(const Value *value, long *out);
+/** @brief Pliega una operacion unaria cuando su operando es constante. */
 static char *fold_unary(const char *op, const Value *operand, const char *type);
+/** @brief Pliega una operacion binaria cuando ambos operandos son constantes. */
 static char *fold_binary(const char *op, const Value *left, const Value *right, const char *type);
+/** @brief Formatea un double de forma compacta para la salida FIS-25. */
 static char *format_double(double value);
+/** @brief Traduce operadores binarios del lenguaje a instrucciones FIS-25. */
 static const char *fis_binary_op(const char *op);
 
 int codegen_emit_fis25(const ASTNode *root, FILE *out, CodegenOptions options) {
