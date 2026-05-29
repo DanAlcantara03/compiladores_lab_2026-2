@@ -16,7 +16,7 @@ echo "==> Generando archivos FIS-25 de examples/*.summ"
 mkdir -p generated
 for source in examples/*.summ; do
     name="$(basename "$source" .summ)"
-    output="generated/$name.fis"
+    output="generated/$name.ci"
     ./summc -o "$output" < "$source"
     echo "    $output"
 done
@@ -25,4 +25,4 @@ echo "==> Ejecutando pruebas"
 make check
 
 echo "==> Listo"
-echo "Generado: ./summc, build/, build-cmake/ y generated/*.fis"
+echo "Generado: ./summc, build/, build-cmake/ y generated/*.ci"

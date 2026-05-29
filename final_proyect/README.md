@@ -40,7 +40,7 @@ Ese comando limpia y regenera:
 - `summc`
 - `build/`
 - `build-cmake/`
-- `generated/*.fis` con todos los ejemplos de `examples/*.summ`
+- `generated/*.ci` con todos los ejemplos de `examples/*.summ`
 
 Alternativa sin Docker Compose:
 
