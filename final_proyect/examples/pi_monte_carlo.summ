@@ -1,0 +1,25 @@
+# Input: number of samples
+# Output: deterministic Monte Carlo approximation of pi
+int samples = input()
+int inside = 0
+int i = 0
+int seed = 137
+int x = 0
+int y = 0
+int dist = 0
+float pi = 0.0
+
+wh i < samples:
+    seed = (seed * 17 + 43) % 1000
+    x = seed
+    seed = (seed * 17 + 43) % 1000
+    y = seed
+
+    dist = x * x + y * y
+    if dist <= 1000000:
+        inside = inside + 1
+
+    i = i + 1
+
+pi = 4.0 * inside / samples
+print(pi)
