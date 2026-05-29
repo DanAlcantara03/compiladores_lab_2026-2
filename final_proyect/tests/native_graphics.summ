@@ -1,0 +1,10 @@
+int x = 0
+wh x < 4:
+    pixel(x, x, 1)
+    x = x + 1
+
+bool pressed = key(8)
+if pressed:
+    print("space")
+else:
+    print("idle")

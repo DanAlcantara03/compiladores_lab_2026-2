@@ -1,0 +1,9 @@
+int x = 3
+int y = 10
+if x < y:
+    y = y + 1
+else:
+    y = y - 1
+wh y > 0:
+    y = y - 1
+print(y)

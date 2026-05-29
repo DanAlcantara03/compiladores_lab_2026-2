@@ -1,0 +1,5 @@
+fn sum(int a, int b) -> int:
+    ret a + b
+
+int result = sum(2, 3)
+print(result)
